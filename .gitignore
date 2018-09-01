@@ -8,6 +8,12 @@ output/
 .psc-package/
 .psc-ide-port
 
+# rust/wasm
+.wasm
+/target/
+Cargo.lock
+**/*.rs.bk
+
 # node
 npm-debug.log
 dist

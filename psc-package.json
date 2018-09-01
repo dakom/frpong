@@ -1,11 +1,17 @@
 {
-  "name": "hello-purescript",
-  "set": "psc-0.12.0",
+  "name": "frpong",
+  "set": "master",
   "source": "https://github.com/purescript/package-sets.git",
   "depends": [
     "console",
+    "debug",
     "effect",
+    "foldable-traversable",
     "functions",
-    "prelude"
+    "maybe",
+    "partial",
+    "prelude",
+    "sodium",
+    "test-unit"
   ]
 }

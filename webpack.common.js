@@ -8,7 +8,7 @@ const isProduction = process.env['NODE_ENV'] === "production" ? true : false;
 
 module.exports = {
     entry: {
-        io: path.resolve('./src/IO.ts'),
+        io: path.resolve('./src/Main-App.ts'),
     },
     output: {
         path: path.resolve("./dist"),
@@ -39,8 +39,9 @@ module.exports = {
     resolve: {
         extensions: [".tsx", ".ts", ".js"],
         alias: {
-            "pure": path.resolve(__dirname, "output/"), 
-            "io": path.resolve(__dirname, "src/io/")
+            "io": path.resolve(__dirname, "src/io/"),
+            "purescript": path.resolve(__dirname, "output/"),
+            "game": path.resolve(__dirname, "src/game/")
         }
     },
     plugins: [

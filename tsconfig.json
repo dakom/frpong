@@ -9,8 +9,9 @@
                 "*"
               ],
             
-            "pure/*": ["output/*"],
-            "io/*": ["src/io/*"]
+            "io/*": ["src/io/*"],
+            "purescript/*": ["output/*"],
+            "game/*": ["src/game/*"]
         },
         "skipLibCheck": true,
         "outDir": "dist/tsc",

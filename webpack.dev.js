@@ -13,7 +13,20 @@ module.exports = merge(common, {
     mode: "development",
     devtool: "inline-source-map",
     module: {
-        rules: rules
+        rules: rules.concat([
+            {
+                test: /\.rs$/,
+                use: [{
+                    loader: 'wasm-loader'
+                }, {
+                    loader: 'rust-native-wasm-loader',
+                    options: {
+                        release: false,
+                        gc: true
+                    }
+                }]
+            }
+        ])
     },
     devServer: {
         //contentBase: path.join(__dirname, "dist/"),
