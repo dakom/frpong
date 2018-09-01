@@ -1,0 +1,40 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "module": "commonjs",
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "node_modules/@types/*",
+                "*"
+              ],
+            
+            "pure/*": ["output/*"],
+            "io/*": ["src/io/*"]
+        },
+        "skipLibCheck": true,
+        "outDir": "dist/tsc",
+        "noImplicitAny": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "target": "es5",
+        "jsx": "react",
+        "lib": [
+            "es6",
+            "es5",
+            "dom"
+        ]
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx"
+    ],
+    
+    "exclude": [
+        "output",
+        "node_modules",
+        "dist",
+        "build",
+        "coverage"
+    ]
+}
