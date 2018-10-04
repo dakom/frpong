@@ -18,11 +18,10 @@ FRPong is a proof-of-concept for architecting a game on the web.
 ## Game (via WebWorker)
 
 * Purescript + SodiumFRP + Rust + Typescript glue
-* Main logic is all Purescript/SodiumFRP
-* Rust compiled to WebAssembly and used for math helpers 
-* Physics is changes of _functions_ to describe motion, not accumulation over time-steps
-* Passes the state updates as a single worker message
+* Main logic is all Purescript and SodiumFRP
 * Solves collision, out-of-bounds checking, and interpenetration adjustments by using time and history
+* Physics is done by changing _functions_ to derive motion, not per-tick numerical accumulation 
+* Rust/WebAssembly is mostly just a proof of concept and used for math helpers
 
 ## IO (entrypoint) 
 
@@ -33,7 +32,7 @@ FRPong is a proof-of-concept for architecting a game on the web.
 
 # Notes
 
-* Purposefully over-engineered - though I dunno, this also kinda feels like a sensible starting point? 
+* Purposefully over-engineered - though I dunno, this also kinda feels like a cool starting point? 
 * The multi-threading is probably pointless and wasteful in this case, but it doesn't really hurt afaik
 * With upcoming offscreenCanvas, might separate rendering into its own thread too
 * Different webpack modes ("dev", "build" and "bundle") - as well as travis setup for deployment
