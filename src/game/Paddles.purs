@@ -6,7 +6,7 @@ import Data.Maybe (Maybe (..))
 import Data.Either (Either (..))
 import SodiumFRP.Class (Stream, Cell, newCellLoop, toCell)
 import SodiumFRP.Transaction (runTransaction)
-import SodiumFRP.Stream (orElse, accum)
+import SodiumFRP.Stream (orElse, accum, snapshot)
 import SodiumFRP.Operational (defer)
 import SodiumFRP.Cell (loopCell)
 import Game.Constants
@@ -19,17 +19,20 @@ import Game.Tick
 
 -- Get a paddle
 getPaddle ::    Stream Tick
+                -> Paddle
                 -> {
                      cPosition :: Cell Position,
                      cTrajectory :: Cell PaddleTrajectory
                    }
-getPaddle sTick =
+getPaddle sTick paddleType =
     {
         cPosition: (\paddle -> paddle.pos) <$> cPaddleState,
         cTrajectory: (\paddle -> paddle.traj) <$> cPaddleState
     }
     where
-        initialPosition = {x: constants.paddleMargin, y: constants.canvasHeight / 2.0}
+        initialPosition = case paddleType of
+            Paddle1 -> {x: constants.paddleMargin, y: constants.canvasHeight / 2.0}
+            Paddle2 -> {x: constants.canvasWidth - constants.paddleMargin - constants.paddleWidth, y: constants.canvasHeight / 2.0}
         initialPaddle = 
             {
                 pos: initialPosition, 
@@ -38,11 +41,14 @@ getPaddle sTick =
         cPaddleState = accum updatePaddle initialPaddle sTick
 
 updatePaddle :: Tick -> PaddleState -> PaddleState
-updatePaddle (ControllerTick controller time) state = 
-    updateTrajectory time controller state #
-    updateMotion time
-updatePaddle tick state =  
-    updateMotion (toTime tick) state
+updatePaddle tick state = case tick of
+    (ControllerTick controller _) ->
+        updateTrajectory time controller state #
+        updateMotion time
+    _ -> 
+        updateMotion time state
+    where 
+        time = toTime tick
 
 updateTrajectory :: Time -> Controller -> PaddleState -> PaddleState
 updateTrajectory startTime controller state = state {traj = newTraj}
@@ -53,6 +59,7 @@ updateTrajectory startTime controller state = state {traj = newTraj}
             DOWN -> PaddleTrajectory startTime (constants.paddleSpeed * -1.0) pos
             NEUTRAL -> PaddleTrajectory startTime 0.0 pos 
             _ -> state.traj
+
 
 updateMotion :: Time -> PaddleState -> PaddleState
 updateMotion time state = state {pos = posAtTime state.traj time}

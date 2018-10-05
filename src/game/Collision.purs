@@ -16,10 +16,24 @@ import Game.Types.Basic
 import Game.Utils.Sodium
 import Game.Trajectory
 
-getCollision :: Stream Time -> Cell Position -> Cell PaddleTrajectory -> Cell Position -> Cell BallTrajectory -> Effect (Stream Collision)
-getCollision sTick cPaddlePosition cPaddleTrajectory cBallPosition cBallTrajectory = do
-    cBallPositionHistory <- accumSingleHistory cBallPosition 
-    let sMaybeCollision = snapshot5 getCollision' sTick cPaddlePosition cPaddleTrajectory cBallPositionHistory cBallTrajectory
+type PaddleInput =
+    {
+        cPosition :: Cell Position,
+        cTrajectory :: Cell PaddleTrajectory 
+    }
+type BallInput =
+    {
+        cPosition :: Cell Position,
+        cTrajectory :: Cell BallTrajectory 
+    }
+getCollision :: Stream Time -> PaddleInput -> PaddleInput -> BallInput -> Effect (Stream Collision)
+getCollision sTick paddle1 paddle2 ball = do
+    cBallPositionHistory <- accumSingleHistory ball.cPosition 
+    let sMaybeCollision = snapshot5 getCollision' sTick 
+                            paddle1.cPosition
+                            paddle1.cTrajectory
+                            cBallPositionHistory 
+                            ball.cTrajectory
     pure $ justStream sMaybeCollision
 
 {-

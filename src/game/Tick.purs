@@ -1,4 +1,4 @@
-module Game.Tick (getTick, toTime, isTickController, isTickCollision, isTickPlain) where 
+module Game.Tick (getTick, sameType, toTime, isTickController, isTickCollision, isTickPlain) where 
 
 import Prelude
 import Effect (Effect)
@@ -64,5 +64,12 @@ convertController = case _ of
     "neutral" -> Just NEUTRAL
     "serve" -> Just SERVE
     _ -> Nothing
+
+-- there might be some way to derive this, not sure
+sameType :: Tick -> Tick -> Boolean
+sameType (PlainTick _) (PlainTick _) = true 
+sameType (ControllerTick t1 _) (ControllerTick t2 _) = if t1 == t2 then true else false
+sameType (CollisionTick _ _) (CollisionTick _ _) = true
+sameType _ _ = false
 
 

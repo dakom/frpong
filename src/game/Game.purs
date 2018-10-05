@@ -5,8 +5,9 @@ import Effect(Effect)
 import Effect.Console (logShow)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (sequence)
-import SodiumFRP.Class (Cell, listen, newStreamLoop, newStreamSink, send, toStream)
+import SodiumFRP.Class (Cell, listen, newStreamLoop, newCellLoop, newStreamSink, send, toStream, toCell)
 import SodiumFRP.Stream (filter, loopStream, snapshot)
+import SodiumFRP.Cell (loopCell)
 import SodiumFRP.Transaction (runTransaction)
 import SodiumFRP.Operational (defer)
 import Game.Constants as GameConstants
@@ -14,10 +15,12 @@ import Game.Paddles
 import Game.Ball
 import Game.Types.Basic (Position, Time)
 import Game.Types.IO (Constants, Renderable)
+import Game.Types.Paddle
 import Game.Tick 
 import Game.Collision
 import Game.Utils.Sodium
 import Game.FFI
+import Game.Ai
 
 {-
     To remove artifacts that result from collision interpenetration displacement,
@@ -64,6 +67,7 @@ main wasmLib firstTs onRender onCollision = runTransaction do
 
     -- streams from game loop
     sCollisionLoop <- newStreamLoop
+    cAiPosLoop <- newCellLoop
 
     {- MAIN -}
 
@@ -73,22 +77,29 @@ main wasmLib firstTs onRender onCollision = runTransaction do
                 (toStream sExternalUpdate) 
                 (toStream sExternalController) 
                 (defer $ toStream sCollisionLoop)
+    
 
     -- game objects with exported cells
-    let paddle = getPaddle sTick
     let ball = getBall sTick 
+    let sAiTick = getAiTick sTick (toCell cAiPosLoop) ball
+    let paddle1 = getPaddle sTick Paddle1
+    let paddle2 = getPaddle sAiTick Paddle2
 
     -- collision detection
-    sCollision <- getCollision (toStream sExternalUpdate) paddle.cPosition paddle.cTrajectory ball.cPosition ball.cTrajectory
+    sCollision <- getCollision (toStream sExternalUpdate) paddle1 paddle2 ball
+
+    {- CLOSE LOOPS -}
     _ <- loopStream sCollisionLoop sCollision 
-  
+    _ <- loopCell cAiPosLoop paddle2.cPosition
+
     {- OUTPUT -}
 
     -- render
     let cRenderables = sequence 
             [
                 addIdToPosition 0.0 <$> ball.cPosition,
-                addIdToPosition 1.0 <$> paddle.cPosition
+                addIdToPosition 1.0 <$> paddle1.cPosition,
+                addIdToPosition 2.0 <$> paddle2.cPosition
             ] 
     let sRenderables = snapshot (\_ r -> r) sExternalRender cRenderables
     _ <- listen sRenderables onRender 

@@ -3,9 +3,11 @@ module Game.Ball (getBall) where
 import Prelude
 import Effect (Effect)
 import Effect.Console (logShow)
+import Effect.Random (randomRange)
+import Effect.Unsafe (unsafePerformEffect)
 import Data.Maybe (Maybe (..), fromJust, isJust, isNothing)
 import Data.Either (Either (..))
-import Math (cos, sin)
+import Math (pi, cos, sin)
 import SodiumFRP.Class (Stream, Cell, newCellLoop, toCell, listen)
 import SodiumFRP.Transaction (runTransaction)
 import SodiumFRP.Stream (accum, orElse, snapshot)
@@ -53,18 +55,18 @@ getBall sTick =
 updateBall :: Tick -> BallState -> BallState
 updateBall tick originalState = case tick of
     (PlainTick time) ->
-        updateMotion time originalState 
+        updatePosition time originalState 
     (ControllerTick controller time) -> case controller of
         SERVE -> beginServe time 
-        _ -> updateMotion time originalState 
+        _ -> updatePosition time originalState 
     (CollisionTick collision time) -> 
         updateVelocity collision originalState #
         updateTrajectory collision time #
-        updateMotion time
+        updatePosition time
     where
         -- TODO - might be able to simplify with lenses
-        updateMotion :: Time -> BallState -> BallState
-        updateMotion time state = state {pos = updateMotion' time state.traj}
+        updatePosition :: Time -> BallState -> BallState
+        updatePosition time state = state {pos = updatePosition' time state.traj}
 
         updateVelocity :: Collision -> BallState -> BallState 
         updateVelocity collision state = state {vel = updateVelocity' collision state.vel}
@@ -74,8 +76,8 @@ updateBall tick originalState = case tick of
 {-
     Position is a function of current trajectory at given time
 -}
-updateMotion' :: Time -> BallTrajectory -> Position 
-updateMotion' time traj = 
+updatePosition' :: Time -> BallTrajectory -> Position 
+updatePosition' time traj = 
     posAtTime traj time
 
 {-
@@ -88,11 +90,14 @@ updateVelocity' collision vel = case collision of
     CollisionWall LeftWall _ -> {x: vel.x * -1.0, y: vel.y}
     CollisionWall RightWall _ -> {x: vel.x * -1.0, y: vel.y}
     -- https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
-    CollisionPaddle _ info -> 
-        {
-            x: (cos info.bounceAngle),
-            y: -(sin info.bounceAngle)
-        }
+    CollisionPaddle _ info -> getVelocity info.bounceAngle
+
+getVelocity :: Number -> Velocity
+getVelocity bounceAngle = 
+    {
+            x: (cos bounceAngle),
+            y: -(sin bounceAngle)
+    }
 {-
     BallTrajectory formula is set in the typeclass (see Trajectory.purs)
     Data which is set here is determined by current ball physics and collision info
@@ -118,7 +123,12 @@ beginServe startTime =
         }
     where
         pos = {x: constants.canvasWidth / 2.0, y: constants.canvasHeight / 2.0}
-        vel = {x: 0.5, y: 0.5} -- todo: make random
+        -- serve should be auto-hittable but with random return
+        randomOffset = unsafePerformEffect $ randomRange (-0.1) 0.1 
+        randomDirection = if (unsafePerformEffect $ randomRange 0.0 1.0) > 0.5
+                          then 2.0
+                          else 1.0
+        vel = getVelocity ((pi * randomDirection) + randomOffset)
 
 
 
