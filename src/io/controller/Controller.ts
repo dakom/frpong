@@ -16,7 +16,7 @@ export const startController = (handle: (controller:ControllerValue) => void) =>
     const updateStatus:StatusUpdate = input => {
         const {controller, status} = input;
         const prevController = _activeController;
-
+        
         _status.set(controller, status);
 
         if(status === InputStatus.START) {

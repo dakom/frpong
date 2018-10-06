@@ -22,8 +22,10 @@ import Game.Types.Tick
 import Game.Tick
 import Game.Trajectory
 import Game.Constants
+
+
 -- get ball
-getBall ::  Stream Tick 
+getBall ::  Stream Tick
             -> {
                 cPosition :: Cell Position,
                 cTrajectory :: Cell BallTrajectory
@@ -44,6 +46,7 @@ getBall sTick =
                 traj: BallTrajectory 0.0 constants.ballSpeed initialVelocity initialPosition
             }
         cBallState = accum updateBall initialBall sTick
+
 
 {-
     A ball update is one of three things:

@@ -17,6 +17,8 @@ import Game.Types.Tick
 import Game.Trajectory
 import Game.Tick
 
+
+
 -- Get a paddle
 getPaddle ::    Stream Tick
                 -> Paddle

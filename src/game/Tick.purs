@@ -1,4 +1,4 @@
-module Game.Tick (getTick, sameType, toTime, isTickController, isTickCollision, isTickPlain) where 
+module Game.Tick where 
 
 import Prelude
 import Effect (Effect)
@@ -12,13 +12,38 @@ import Game.Types.Tick
 import Game.Types.Collision
 import Game.Utils.Sodium
 
-getTick :: Stream Time -> Stream String -> Stream Collision -> Effect (Stream Tick)
-getTick sTime sControllerString sCollisionValue = do
-    cTime <- hold sTime 0.0 -- 0.0 is arbitrary since events are after first tick
+getTicks :: Stream Time 
+            -> Stream Collision
+            -> Stream String 
+            -> Stream String 
+            ->  Effect {
+                    sBall :: Stream Tick,
+                    sPaddle1 :: Stream Tick,
+                    sPaddle2 :: Stream Tick
+                }
+getTicks sTime sCollisionValue sController1String sController2String = do
     let sTick = (\time -> PlainTick time) <$> sTime
-    let sController = getController sControllerString cTime
-    let sCollision = getCollision sCollisionValue cTime 
-    pure $ orElse sController (orElse sCollision sTick)
+    cTime <- hold sTime 0.0
+
+    let sCollision = getCollisionTick cTime sCollisionValue
+    let sController1 = getControllerTick cTime sController1String
+    let sController2 = getControllerTick cTime sController2String
+    pure {
+        sBall : orElse sController1 (orElse sCollision sTick),
+        sPaddle1 : orElse sController1 sTick,
+        sPaddle2 : orElse sController2 sTick
+    }
+
+
+getCollisionTick :: Cell Time -> Stream Collision -> Stream Tick
+getCollisionTick cTime sCollisionValue =
+        snapshot (\collision time -> CollisionTick collision time) sCollisionValue cTime
+
+getControllerTick :: Cell Time -> Stream String -> Stream Tick
+getControllerTick cTime sControllerString = sController
+    where
+        sController = snapshot (\controller time -> ControllerTick controller time) sControllerValue cTime
+        sControllerValue = justStream (convertController <$> sControllerString)
 
 -- helper for just working with straight time values
 toTime :: Tick -> Time
@@ -43,18 +68,6 @@ isTickPlain = case _ of
     PlainTick _ -> true
     _ -> false
 
--- get the controller with the most recent tick timestamp
-getController :: Stream String -> Cell Time -> Stream Tick 
-getController sControllerString cTime =
-    snapshot (\controller time -> ControllerTick controller time) sController cTime
-    where
-          sController = justStream (convertController <$> sControllerString)
-
-
--- get the collision with the most recent tick timestamp
-getCollision :: Stream Collision -> Cell Time -> Stream Tick 
-getCollision sCollision cTime =
-    snapshot (\collision time -> CollisionTick collision time) sCollision cTime
 
 -- controller values come in as a string, so they should be validated
 convertController :: String -> Maybe Controller

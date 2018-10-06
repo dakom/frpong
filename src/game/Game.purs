@@ -6,7 +6,7 @@ import Effect.Console (logShow)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (sequence)
 import SodiumFRP.Class (Cell, listen, newStreamLoop, newCellLoop, newStreamSink, send, toStream, toCell)
-import SodiumFRP.Stream (filter, loopStream, snapshot)
+import SodiumFRP.Stream (orElse, hold, filter, loopStream, snapshot)
 import SodiumFRP.Cell (loopCell)
 import SodiumFRP.Transaction (runTransaction)
 import SodiumFRP.Operational (defer)
@@ -16,11 +16,11 @@ import Game.Ball
 import Game.Types.Basic (Position, Time)
 import Game.Types.IO (Constants, Renderable)
 import Game.Types.Paddle
+import Game.Types.Tick
 import Game.Tick 
 import Game.Collision
 import Game.Utils.Sodium
 import Game.FFI
-import Game.Ai
 
 {-
     To remove artifacts that result from collision interpenetration displacement,
@@ -52,7 +52,8 @@ main :: WasmLib
             {
                 sendUpdate :: Time -> Effect Unit,
                 sendRender :: Unit -> Effect Unit,
-                sendController :: String -> Effect Unit
+                sendController1 :: String -> Effect Unit,
+                sendController2 :: String -> Effect Unit
             }
 
 main wasmLib firstTs onRender onCollision = runTransaction do
@@ -63,34 +64,33 @@ main wasmLib firstTs onRender onCollision = runTransaction do
     -- streams from the outside world
     sExternalUpdate <- newStreamSink Nothing
     sExternalRender <- newStreamSink Nothing
-    sExternalController <- newStreamSink Nothing
+    sExternalController1 <- newStreamSink Nothing
+    sExternalController2 <- newStreamSink Nothing
 
     -- streams from game loop
     sCollisionLoop <- newStreamLoop
-    cAiPosLoop <- newCellLoop
 
     {- MAIN -}
 
     -- due to web api restrictions, all time is based on rAF values
     -- therefore it's one tick, albeit of different types
-    sTick <- getTick 
-                (toStream sExternalUpdate) 
-                (toStream sExternalController) 
+    ticks <- getTicks
+                (toStream sExternalUpdate)
                 (defer $ toStream sCollisionLoop)
+                (toStream sExternalController1) 
+                (toStream sExternalController2) 
     
-
     -- game objects with exported cells
-    let ball = getBall sTick 
-    let sAiTick = getAiTick sTick (toCell cAiPosLoop) ball
-    let paddle1 = getPaddle sTick Paddle1
-    let paddle2 = getPaddle sAiTick Paddle2
+    let ball = getBall ticks.sBall
+
+    let paddle1 = getPaddle ticks.sPaddle1 Paddle1 
+    let paddle2 = getPaddle ticks.sPaddle2 Paddle2
 
     -- collision detection
     sCollision <- getCollision (toStream sExternalUpdate) paddle1 paddle2 ball
 
     {- CLOSE LOOPS -}
     _ <- loopStream sCollisionLoop sCollision 
-    _ <- loopCell cAiPosLoop paddle2.cPosition
 
     {- OUTPUT -}
 
@@ -111,7 +111,8 @@ main wasmLib firstTs onRender onCollision = runTransaction do
         {
             sendUpdate: send sExternalUpdate,
             sendRender: send sExternalRender,
-            sendController: send sExternalController
+            sendController1: send sExternalController1,
+            sendController2: send sExternalController2
         }
 
     where

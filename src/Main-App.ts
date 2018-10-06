@@ -37,7 +37,7 @@ const startMain = () => {
 
     startController(controller => {
         worker.postMessage({
-            cmd: WorkerCommand.CONTROLLER,
+            cmd: WorkerCommand.CONTROLLER1,
             controller
         })
     });

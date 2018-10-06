@@ -7,7 +7,7 @@ import Effect.Unsafe (unsafePerformEffect)
 import Data.Maybe (Maybe(..))
 import Control.Alternative((<|>))
 import SodiumFRP.Class (Stream, Cell, listen)
-import SodiumFRP.Stream (snapshot, snapshot3, snapshot5, hold)
+import SodiumFRP.Stream (snapshot, snapshot3, snapshot4, snapshot5, hold)
 import Game.Constants
 import Game.Types.Collision
 import Game.Types.Environment
@@ -26,14 +26,26 @@ type BallInput =
         cPosition :: Cell Position,
         cTrajectory :: Cell BallTrajectory 
     }
+
+type Paddles =
+    {
+        paddle1Pos :: Position,
+        paddle1Traj :: PaddleTrajectory,
+        paddle2Pos :: Position,
+        paddle2Traj :: PaddleTrajectory
+    }
 getCollision :: Stream Time -> PaddleInput -> PaddleInput -> BallInput -> Effect (Stream Collision)
 getCollision sTick paddle1 paddle2 ball = do
     cBallPositionHistory <- accumSingleHistory ball.cPosition 
-    let sMaybeCollision = snapshot5 getCollision' sTick 
-                            paddle1.cPosition
-                            paddle1.cTrajectory
-                            cBallPositionHistory 
-                            ball.cTrajectory
+    
+    let cPaddles =   (\paddle1Pos paddle1Traj paddle2Pos paddle2Traj -> 
+                                {paddle1Pos, paddle1Traj, paddle2Pos, paddle2Traj})
+                            <$> paddle1.cPosition 
+                            <*> paddle1.cTrajectory
+                            <*> paddle2.cPosition
+                            <*> paddle2.cTrajectory
+
+    let sMaybeCollision = snapshot4 getCollision' sTick cPaddles cBallPositionHistory ball.cTrajectory
     pure $ justStream sMaybeCollision
 
 {-
@@ -43,8 +55,8 @@ getCollision sTick paddle1 paddle2 ball = do
 
     TODO : Paddle 2 Collision
 -}
-getCollision' :: Time -> Position -> PaddleTrajectory -> SingleHistory Position -> BallTrajectory -> Maybe Collision 
-getCollision' time paddlePosition paddleTraj ballPositionHistory ballTraj = paddle1Collision <|> paddle2Collision <|> wallCollision
+getCollision' :: Time -> Paddles -> SingleHistory Position -> BallTrajectory -> Maybe Collision 
+getCollision' time paddles ballPositionHistory ballTraj = paddle1Collision <|> paddle2Collision <|> wallCollision
     where
         ballPosition = ballPositionHistory.curr
         ballDiff = 
@@ -59,8 +71,8 @@ getCollision' time paddlePosition paddleTraj ballPositionHistory ballTraj = padd
         leftWall = ballRadius
         halfPaddleHeight = constants.paddleHeight / 2.0
 
-        paddle1Collision = getPaddleCollision 
-        paddle2Collision = Nothing
+        paddle1Collision = getPaddleCollision Paddle1 paddles.paddle1Pos paddles.paddle1Traj 
+        paddle2Collision = getPaddleCollision Paddle2 paddles.paddle2Pos paddles.paddle2Traj 
 
         {-
             Paddle/Ball collision uses motion over the timespan between ticks
@@ -77,9 +89,9 @@ getCollision' time paddlePosition paddleTraj ballPositionHistory ballTraj = padd
             Finally, the bounce angle is calculated and stored
         -}
 
-        getPaddleCollision :: Maybe Collision
-        getPaddleCollision = 
-            if ballDiff.x < 0.0 && ballPosition.x < paddleEdge
+        getPaddleCollision :: Paddle -> Position -> PaddleTrajectory -> Maybe Collision
+        getPaddleCollision paddleType paddlePosition paddleTraj = 
+            if isPossiblyValid 
             then
                 let
                     hitPoint = {
@@ -102,7 +114,7 @@ getCollision' time paddlePosition paddleTraj ballPositionHistory ballTraj = padd
                     bounceAngle = normalizedRelativeIntersectionY 
                 in
                 if hitPoint.y < paddleTop && hitPoint.y > paddleBottom
-                then Just (CollisionPaddle Paddle1 {
+                then Just (CollisionPaddle paddleType {
                           hitPoint,
                           timeDiff,
                           bounceAngle
@@ -110,7 +122,12 @@ getCollision' time paddlePosition paddleTraj ballPositionHistory ballTraj = padd
                 else Nothing
             else Nothing
             where
-                paddleEdge = paddlePosition.x + (constants.paddleWidth / 2.0) + ballRadius
+                isPossiblyValid = case paddleType of
+                    Paddle1 -> ballDiff.x < 0.0 && ballPosition.x < paddleEdge
+                    Paddle2 -> ballDiff.x > 0.0 && ballPosition.x > paddleEdge
+                paddleEdge = case paddleType of
+                    Paddle1 -> paddlePosition.x + (constants.paddleWidth / 2.0) + ballRadius
+                    Paddle2 -> paddlePosition.x -- - ((constants.paddleWidth / 2.0) + ballRadius)
 
         {-
             Wall collision is conceptually similar to paddle collision

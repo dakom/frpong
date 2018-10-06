@@ -1,22 +1,24 @@
+import AiWorker = require('worker-loader!./Ai-Worker');
 import {WorkerCommand, MESSAGE} from "io/types/Worker-Types";
 import {Renderable} from "io/types/Renderable-Types";
 import {getWasm} from "./Wasm-Loader";
 const psBridge = require("purescript/index"); 
 
-
+const aiWorker = (AiWorker as any)();
 
 const UPDATE_DELAY_MS = 0;
 
 interface Streams {
     sendUpdate: (now:number) => void;
     sendRender: () => void;
-    sendController: (ctlr:string) => void;
+    sendController1: (ctlr:string) => void;
+    sendController2: (aiCtrl:string) => void;
 }
 
 
 //Global state (also helps deal with race-conditions when loading)
 let wasmLib;
-let workerComms = false;
+let workersPending = 2;
 let streams:Streams;
 
 /*
@@ -37,7 +39,8 @@ const onTick = now => {
         streams = {
             sendUpdate: (now:number) => _streams.sendUpdate (now) (),
             sendRender: () => _streams.sendRender (now) (),
-            sendController: (ctlr:string) => _streams.sendController(ctlr) (),
+            sendController1: (ctlr:string) => _streams.sendController1(ctlr) (),
+            sendController2: (ctlr:string) => _streams.sendController2(ctlr) (),
         }
     }
 
@@ -57,6 +60,12 @@ const onRender = (renderables:Array<Renderable>) => () => {
         cmd: WorkerCommand.RENDER,
         renderables
     });
+
+
+    aiWorker.postMessage({
+        cmd: WorkerCommand.AI_STATE,
+        renderables
+    });
 }
 
 const onCollision = (collisionName:string) => () => {
@@ -66,7 +75,7 @@ const onCollision = (collisionName:string) => () => {
 //We don't know whether wasm-loading or worker-setup happens first
 //To avoid the race condition, wait till both are ready before starting the game loop
 const startIfReady = () => {
-    if(wasmLib != null && workerComms) {
+    if(wasmLib != null && !workersPending) {
         (self as any).postMessage({
             cmd: WorkerCommand.WORKER_READY,
             constants: psBridge.constants
@@ -80,18 +89,41 @@ getWasm().then(_wasmLib => {
 });
 
 
+aiWorker.addEventListener(MESSAGE, (evt:MessageEvent) => {
+    switch(evt.data.cmd) {
+        case WorkerCommand.WORKER_READY: {
+            workersPending--;
+            startIfReady();
+            break;
+        }
+        case WorkerCommand.AI_CONTROLLER:
+            streams.sendController2(evt.data.controller);
+            break;
+    }
+});
+
+aiWorker.postMessage({
+    cmd: WorkerCommand.WORKER_START
+});
+
 (self as any).addEventListener(MESSAGE, (evt:MessageEvent) => {
 
     switch(evt.data.cmd) {
         case WorkerCommand.WORKER_START:
-            workerComms = true; 
+            workersPending--;
             startIfReady();
             break;
         case WorkerCommand.TICK:
             onTick(evt.data.now);
             break;
-        case WorkerCommand.CONTROLLER:
-            streams.sendController(evt.data.controller);
+        case WorkerCommand.CONTROLLER1:
+            streams.sendController1(evt.data.controller);
+            break;
+
+        case WorkerCommand.CONTROLLER2:
+            streams.sendController2(evt.data.controller);
             break;
     }
 });
+
+
