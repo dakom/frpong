@@ -18,3 +18,9 @@ constants =
         canvasHeight: 768.0
     
     }
+
+
+topWall = constants.canvasHeight - constants.ballRadius
+bottomWall = constants.ballRadius 
+rightWall = constants.canvasWidth - constants.ballRadius
+leftWall = constants.ballRadius 

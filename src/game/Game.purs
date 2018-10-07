@@ -48,6 +48,7 @@ main :: WasmLib
         -> Time 
         -> (Array Renderable -> Effect Unit) 
         -> (String -> Effect Unit) 
+        -> (Position -> Effect Unit)
         -> Effect 
             {
                 sendUpdate :: Time -> Effect Unit,
@@ -56,7 +57,7 @@ main :: WasmLib
                 sendController2 :: String -> Effect Unit
             }
 
-main wasmLib firstTs onRender onCollision = runTransaction do
+main wasmLib firstTs onRender onCollision onAiTarget = runTransaction do
     {- FFI -}
     _ <- assignLib wasmLib
     {- INPUT -}
@@ -87,10 +88,10 @@ main wasmLib firstTs onRender onCollision = runTransaction do
     let paddle2 = getPaddle ticks.sPaddle2 Paddle2
 
     -- collision detection
-    sCollision <- getCollision (toStream sExternalUpdate) paddle1 paddle2 ball
+    collision <- getCollision (toStream sExternalUpdate) paddle1 paddle2 ball
 
     {- CLOSE LOOPS -}
-    _ <- loopStream sCollisionLoop sCollision 
+    _ <- loopStream sCollisionLoop collision.sCollision 
 
     {- OUTPUT -}
 
@@ -105,9 +106,11 @@ main wasmLib firstTs onRender onCollision = runTransaction do
     _ <- listen sRenderables onRender 
 
     -- play collision audio 
-    _ <- listen (getCollisionAudioName <$> sCollision) onCollision
+    _ <- listen (getCollisionAudioName <$> collision.sCollision) onCollision
 
-    pure 
+    _ <- listen collision.sAiCollision onAiTarget 
+    _ <- listen collision.sAiCollision logShow
+    pure
         {
             sendUpdate: send sExternalUpdate,
             sendRender: send sExternalRender,

@@ -92,7 +92,6 @@ updateVelocity' collision vel = case collision of
     CollisionWall BottomWall _ -> {x: vel.x, y: vel.y * -1.0}
     CollisionWall LeftWall _ -> {x: vel.x * -1.0, y: vel.y}
     CollisionWall RightWall _ -> {x: vel.x * -1.0, y: vel.y}
-    -- https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
     CollisionPaddle _ info -> getVelocity info.bounceAngle
 
 getVelocity :: Number -> Velocity
@@ -130,7 +129,8 @@ beginServe startTime =
         randomOffset = unsafePerformEffect $ randomRange (-0.1) 0.1 
         randomDirection = if (unsafePerformEffect $ randomRange 0.0 1.0) > 0.5
                           then 2.0
-                          else 1.0
+                          --else 1.0
+                          else 2.0
         vel = getVelocity ((pi * randomDirection) + randomOffset)
 
 

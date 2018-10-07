@@ -20,6 +20,7 @@ interface Streams {
 let wasmLib;
 let workersPending = 2;
 let streams:Streams;
+let lastRenderables;
 
 /*
  Ticks are driven by requestAnimationFrame, even though we're in a worker
@@ -34,7 +35,7 @@ let streams:Streams;
 const onTick = now => {
     if(streams == null) {
         //First tick
-        const _streams = psBridge.main (wasmLib) (now) (onRender) (onCollision) ();
+        const _streams = psBridge.main (wasmLib) (now) (onRender) (onCollision) (onAiTarget) ();
 
         streams = {
             sendUpdate: (now:number) => _streams.sendUpdate (now) (),
@@ -62,14 +63,20 @@ const onRender = (renderables:Array<Renderable>) => () => {
     });
 
 
-    aiWorker.postMessage({
-        cmd: WorkerCommand.AI_STATE,
-        renderables
-    });
+    lastRenderables = renderables;
+
 }
 
 const onCollision = (collisionName:string) => () => {
     //console.log("COLLISION: " + collisionName);
+}
+
+const onAiTarget = (pos) => () => {
+    aiWorker.postMessage({
+        cmd: WorkerCommand.AI_STATE,
+        paddleY: lastRenderables[2].y,
+        targetPos: pos
+    });
 }
 
 //We don't know whether wasm-loading or worker-setup happens first

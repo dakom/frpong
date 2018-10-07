@@ -12,15 +12,9 @@ let wasmLib;
 let workersPending = 1;
 let controller;
 
-const onState= (renderables:Array<Renderable>) => {
+let lastTargetPos;
 
-    // console.log(renderables[0].x, renderables[0].y);
-
-    const ball = renderables[0];
-    const paddle = renderables[2];
-
-    const _controller = wasmLib.ai_controller(ball.y, paddle.y);
-
+const sendController = (_controller:number) => {
     if(controller !== _controller) {
         controller = _controller;
 
@@ -29,6 +23,16 @@ const onState= (renderables:Array<Renderable>) => {
             controller: controllerLookup.get(controller)
         });
     }
+}
+
+const onState= ({paddleY, targetPos}) => {
+    // console.log(renderables[0].x, renderables[0].y);
+    //if(!lastTargetPos || lastTargetPos.y !== targetPos.y) {
+    if(Math.abs(targetPos.y - paddleY) > 5) {
+        sendController(wasmLib.ai_controller(targetPos.y, paddleY));
+    }
+    //    lastTargetPos = targetPos;
+    //} 
 }
 
 //We don't know whether wasm-loading or worker-setup happens first
@@ -54,7 +58,7 @@ getWasm().then(_wasmLib => {
             startIfReady();
             break;
         case WorkerCommand.AI_STATE:
-            onState(evt.data.renderables);
+            onState(evt.data);
             break;
     }
 });

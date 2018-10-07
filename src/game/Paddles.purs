@@ -1,4 +1,4 @@
-module Game.Paddles (getPaddle) where
+module Game.Paddles (getPaddle, getPaddleEdge) where
 
 import Prelude
 import Effect (Effect)
@@ -69,6 +69,12 @@ updateMotion time state = state {pos = posAtTime state.traj time}
 -- By just defining the startime, speed, and position values...
 -- we always get the full trajectory functions :D
 
+-- helper
+
+getPaddleEdge :: Paddle -> Position -> Number
+getPaddleEdge paddleType paddlePosition = case paddleType of
+    Paddle1 -> paddlePosition.x + (constants.paddleWidth / 2.0) + constants.ballRadius 
+    Paddle2 -> paddlePosition.x - ((constants.paddleWidth / 2.0) + constants.ballRadius)
 
 type PaddleState = 
     {
