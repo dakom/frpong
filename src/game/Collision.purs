@@ -22,62 +22,55 @@ import Game.Paddles
 type PaddleInput =
     {
         cPosition :: Cell Position,
-        cTrajectory :: Cell PaddleTrajectory 
+        cTrajectory :: forall traj. Trajectory traj => Cell traj
     }
 type BallInput =
     {
         cPosition :: Cell Position,
-        cTrajectory :: Cell BallTrajectory 
+        cTrajectory :: forall traj. Trajectory traj => Cell traj
     }
 
-type Paddles =
-    {
-        paddle1Pos :: Position,
-        paddle1Traj :: PaddleTrajectory,
-        paddle2Pos :: Position,
-        paddle2Traj :: PaddleTrajectory
-    }
-
-getCollision :: Stream Time -> PaddleInput -> PaddleInput -> BallInput -> Effect ({sCollision :: Stream Collision, sAiCollision :: Stream Position})
-getCollision sTick paddle1 paddle2 ball = runTransaction do 
-    cBallPositionHistory <- accumSingleHistory ball.cPosition 
+getCollision :: forall traj1 traj2 traj3.
+                Trajectory traj1 => Trajectory traj2 => Trajectory traj3 =>
+                Stream Time 
+                -> Cell Position
+                -> Cell traj1
+                -> Cell Position
+                -> Cell traj2
+                -> Cell Position
+                -> Cell traj3
+                -> Effect (Stream Collision)
+getCollision sTick cPaddle1Pos cPaddle1Traj cPaddle2Pos cPaddle2Traj cBallPos cBallTraj = runTransaction do 
+    cBallPositionHistory <- accumSingleHistory cBallPos 
     
-    let sWallCollision = justStream $ snapshot3 getWallCollision sTick ball.cPosition ball.cTrajectory 
+    let sWallCollision = justStream $ snapshot3 getWallCollision sTick cBallPos cBallTraj 
 
-    let sPaddle1Collision = justStream $ snapshot5 (getPaddleCollision Paddle1) sTick cBallPositionHistory ball.cTrajectory paddle1.cPosition paddle1.cTrajectory 
-    let sPaddle2Collision = justStream $ snapshot5 (getPaddleCollision Paddle2) sTick cBallPositionHistory ball.cTrajectory paddle2.cPosition paddle2.cTrajectory 
+    let sPaddle1Collision = justStream $ snapshot5 (getPaddleCollision Paddle1) sTick cBallPositionHistory cBallTraj cPaddle1Pos cPaddle1Traj 
+    let sPaddle2Collision = justStream $ snapshot5 (getPaddleCollision Paddle2) sTick cBallPositionHistory cBallTraj cPaddle2Pos cPaddle2Traj 
    
-    let sAiCollision = justStream $ snapshot3 getEventualAiCollision sTick cBallPositionHistory ball.cTrajectory
-
-    pure {
-        sCollision: orElse sPaddle1Collision (orElse sPaddle2Collision sWallCollision),
-        sAiCollision 
-    }
-
-
+    pure $ orElse sPaddle1Collision (orElse sPaddle2Collision sWallCollision)
 
 {-
     Collision detection happens in two steps:
     1. See if the ball collided
     2. Move the collision point back in time to where it really intersected 
+
+    Paddle/Ball collision uses motion over the timespan between ticks
+    If the ball has gone past the paddle's x threshhold, the following happens:
+        1. Get both the time and y-coordinate for when the ball arrived at paddle-x 
+        2. Use this time to get the paddle's y coordinate at that same moment
+        3. Detect collision (paddle at that time and ball at that time)
+        4. Collision info includes the time difference compared to current time, and hit point
+        5. This info will ultimately be used to create the new trajectory, 
+           thereby "rewinding time" and preventing out-of-bounds errors
+
+        The difference in motion since last update is also checked to prevent bouncing on the back of the paddle
+
+        Finally, the bounce angle is calculated and stored
 -}
-       
-        {-
-            Paddle/Ball collision uses motion over the timespan between ticks
-            If the ball has gone past the paddle's x threshhold, the following happens:
-                1. Get both the time and y-coordinate for when the ball arrived at paddle-x 
-                2. Use this time to get the paddle's y coordinate at that same moment
-                3. Detect collision (paddle at that time and ball at that time)
-                4. Collision info includes the time difference compared to current time, and hit point
-                5. This info will ultimately be used to create the new trajectory, 
-                   thereby "rewinding time" and preventing out-of-bounds errors
 
-            The difference in motion since last update is also checked to prevent bouncing on the back of the paddle
-
-            Finally, the bounce angle is calculated and stored
-        -}
-
-getPaddleCollision :: Paddle -> Time -> SingleHistory Position -> BallTrajectory -> Position -> PaddleTrajectory -> Maybe Collision
+getPaddleCollision :: forall ballTraj paddleTraj. Trajectory ballTraj => Trajectory paddleTraj =>
+                        Paddle -> Time -> SingleHistory Position -> ballTraj -> Position -> paddleTraj -> Maybe Collision
 getPaddleCollision paddleType time ballPositionHistory ballTraj paddlePosition paddleTraj = 
     if isPossiblyValid 
         then
@@ -96,7 +89,7 @@ getPaddleCollision paddleType time ballPositionHistory ballTraj paddlePosition p
             paddleBottom = (paddlePositionAtTime.y - halfPaddleHeight) - ballRadius
                    
                 
-                      -- https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
+            -- https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
             relativeIntersectY = paddlePositionAtTime.y - hitPoint.y
             normalizedRelativeIntersectionY = (relativeIntersectY/halfPaddleHeight)
             bounceAngle = case paddleType of
@@ -130,7 +123,7 @@ getPaddleCollision paddleType time ballPositionHistory ballTraj paddlePosition p
 -}
 
 
-getWallCollision :: Time -> Position -> BallTrajectory -> Maybe Collision 
+getWallCollision :: forall traj. Trajectory traj => Time -> Position -> traj -> Maybe Collision 
 getWallCollision time ballPosition ballTraj
     | ballPosition.y > topWall =    Just (CollisionWall TopWall ({
                                         hitPoint: {
@@ -165,12 +158,6 @@ getWallCollision time ballPosition ballTraj
                                             }))
     | otherwise = Nothing
 
-
--- doesn't need to be perfect for paddle, wall target is good enough
-getEventualAiCollision :: Time -> SingleHistory Position -> BallTrajectory -> Maybe Position
-getEventualAiCollision time ballHistory ballTraj
-    | (ballHistory.curr.x - ballHistory.prev.x) > 0.0 = Just { x: rightWall, y: getYforX ballTraj rightWall }
-    | otherwise = Nothing
 
 -- for sending to external audio player
 getCollisionAudioName :: Collision -> String

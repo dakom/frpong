@@ -21,3 +21,6 @@ exports.paddle_traj_posImpl = function(t, s, p, i, bl, tl) {
 exports.paddle_traj_timeImpl = function(n,s,p,i) {
     return lib.ball_traj_time(n,s,p,i);
 }
+exports.ai_traj_posImpl = function(p, b, bl, tl) {
+    return lib.ai_traj_pos(p, b, bl, tl);
+}

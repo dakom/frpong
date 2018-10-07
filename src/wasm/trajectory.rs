@@ -43,6 +43,7 @@ pub fn paddle_traj_pos(t:f64, s:f64, p:f64, i:f64, bl:f64, tl:f64) -> f64 {
     }
 }
 
+
 #[no_mangle]
 //returns t
 pub fn paddle_traj_time(n:f64, s:f64, p:f64, i:f64) -> f64 {
@@ -51,6 +52,18 @@ pub fn paddle_traj_time(n:f64, s:f64, p:f64, i:f64) -> f64 {
     } else {
         i + ((n - p)/s)
     }
+}
+#[no_mangle]
+//returns n
+pub fn ai_traj_pos(previous_y: f64, ball_y:f64, bl:f64, tl:f64) -> f64 {
+    let max_distance = 4.5;
+    //limit paddle to stay on screen
+    let target = clamp(bl, tl, ball_y);
+    //limit update distance to keep it winable
+    let diff = clamp(-max_distance, max_distance, target - previous_y);
+
+    previous_y + diff
+    
 }
 
 //Helper Utils

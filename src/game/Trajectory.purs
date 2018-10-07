@@ -12,9 +12,13 @@ import Game.FFI
 -}
 
 class Trajectory a where
-    posAtTime :: a -> Time -> Position
-    timeAtX :: a -> Number -> Time
-    timeAtY :: a -> Number -> Time
+    posAtTime :: a -> PosAtTime 
+    timeAtX :: a -> TimeAtX 
+    timeAtY :: a -> TimeAtY 
+
+type PosAtTime = Time -> Position
+type TimeAtX = Number -> Time
+type TimeAtY = Number -> Time
 
 getXforY :: forall traj. Trajectory traj => traj -> Number -> Number
 getXforY traj y = pos.x
@@ -46,13 +50,17 @@ instance paddleTrajectory :: Trajectory PaddleTrajectory where
     posAtTime (PaddleTrajectory startTime speed pos) =
         \t -> {
             x: pos.x,
-            y: paddle_traj_pos t speed pos.y startTime bottomY topY
+            y: paddle_traj_pos t speed pos.y startTime paddleBottomY paddleTopY
         }
-        where
-            halfHeight = constants.paddleHeight / 2.0 
-            bottomY = halfHeight
-            topY = constants.canvasHeight - halfHeight 
     timeAtX (PaddleTrajectory startTime speed pos) = 
         \x -> startTime -- kinda arbitrary
     timeAtY (PaddleTrajectory startTime speed pos) =
         \y -> paddle_traj_time y speed pos.x startTime
+
+
+data DynamicTrajectory = DynamicTrajectory PosAtTime TimeAtX TimeAtY
+instance dynamicTrajectory :: Trajectory DynamicTrajectory where
+    posAtTime (DynamicTrajectory f1 _ _ ) = \t -> f1 t
+    timeAtX (DynamicTrajectory _ f2 _) = \t -> f2 t
+    timeAtY (DynamicTrajectory _ _ f3) = \t -> f3 t
+

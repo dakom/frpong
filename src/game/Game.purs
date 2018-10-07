@@ -20,6 +20,7 @@ import Game.Types.Tick
 import Game.Tick 
 import Game.Collision
 import Game.Utils.Sodium
+import Game.Ai
 import Game.FFI
 
 {-
@@ -85,13 +86,14 @@ main wasmLib firstTs onRender onCollision onAiTarget = runTransaction do
     let ball = getBall ticks.sBall
 
     let paddle1 = getPaddle ticks.sPaddle1 Paddle1 
-    let paddle2 = getPaddle ticks.sPaddle2 Paddle2
+    -- let paddle2 = getPaddle ticks.sPaddle2 Paddle2
+    paddle2 <- getAiPaddle ticks.sPaddle2 ball
 
     -- collision detection
-    collision <- getCollision (toStream sExternalUpdate) paddle1 paddle2 ball
+    sCollision <- getCollision (toStream sExternalUpdate) paddle1.cPosition paddle1.cTrajectory paddle2.cPosition paddle2.cTrajectory ball.cPosition ball.cTrajectory 
 
     {- CLOSE LOOPS -}
-    _ <- loopStream sCollisionLoop collision.sCollision 
+    _ <- loopStream sCollisionLoop sCollision 
 
     {- OUTPUT -}
 
@@ -106,10 +108,10 @@ main wasmLib firstTs onRender onCollision onAiTarget = runTransaction do
     _ <- listen sRenderables onRender 
 
     -- play collision audio 
-    _ <- listen (getCollisionAudioName <$> collision.sCollision) onCollision
+    _ <- listen (getCollisionAudioName <$> sCollision) onCollision
 
-    _ <- listen collision.sAiCollision onAiTarget 
-    _ <- listen collision.sAiCollision logShow
+    -- _ <- listen collision.sAiCollision onAiTarget 
+    -- _ <- listen collision.sAiCollision logShow
     pure
         {
             sendUpdate: send sExternalUpdate,

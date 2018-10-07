@@ -24,3 +24,11 @@ topWall = constants.canvasHeight - constants.ballRadius
 bottomWall = constants.ballRadius 
 rightWall = constants.canvasWidth - constants.ballRadius
 leftWall = constants.ballRadius 
+
+paddle1x = constants.paddleMargin
+paddle2x = constants.canvasWidth - constants.paddleMargin - constants.paddleWidth
+
+
+paddleHalfHeight = constants.paddleHeight / 2.0 
+paddleBottomY = paddleHalfHeight 
+paddleTopY = constants.canvasHeight - paddleHalfHeight 

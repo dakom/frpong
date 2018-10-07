@@ -33,8 +33,8 @@ getPaddle sTick paddleType =
     }
     where
         initialPosition = case paddleType of
-            Paddle1 -> {x: constants.paddleMargin, y: constants.canvasHeight / 2.0}
-            Paddle2 -> {x: constants.canvasWidth - constants.paddleMargin - constants.paddleWidth, y: constants.canvasHeight / 2.0}
+            Paddle1 -> {x: paddle1x, y: constants.canvasHeight / 2.0}
+            Paddle2 -> {x: paddle2x, y: constants.canvasHeight / 2.0}
         initialPaddle = 
             {
                 pos: initialPosition, 
