@@ -20,7 +20,6 @@ interface Streams {
 let wasmLib;
 let workersPending = 2;
 let streams:Streams;
-let lastRenderables;
 
 /*
  Ticks are driven by requestAnimationFrame, even though we're in a worker
@@ -35,7 +34,7 @@ let lastRenderables;
 const onTick = now => {
     if(streams == null) {
         //First tick
-        const _streams = psBridge.main (wasmLib) (now) (onRender) (onCollision) (onAiTarget) ();
+        const _streams = psBridge.main (wasmLib) (now) (onRender) (onCollision) ();
 
         streams = {
             sendUpdate: (now:number) => _streams.sendUpdate (now) (),
@@ -63,21 +62,24 @@ const onRender = (renderables:Array<Renderable>) => () => {
     });
 
 
-    lastRenderables = renderables;
-
+    aiWorker.postMessage({
+        cmd: WorkerCommand.AI_UPDATE,
+        ball_x: renderables[0].x,
+        ball_y: renderables[0].y,
+        paddle1_x: renderables[1].x,
+        paddle1_y: renderables[1].y,
+        paddle2_x: renderables[2].x,
+        paddle2_y: renderables[2].y
+    });
 }
 
 const onCollision = (collisionName:string) => () => {
-    //console.log("COLLISION: " + collisionName);
-}
-
-const onAiTarget = (pos) => () => {
-    aiWorker.postMessage({
-        cmd: WorkerCommand.AI_STATE,
-        paddleY: lastRenderables[2].y,
-        targetPos: pos
+    (self as any).postMessage({
+        cmd: WorkerCommand.COLLISION_AUDIO,
+        collisionName
     });
 }
+
 
 //We don't know whether wasm-loading or worker-setup happens first
 //To avoid the race condition, wait till both are ready before starting the game loop

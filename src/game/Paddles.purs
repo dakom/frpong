@@ -22,11 +22,12 @@ import Game.Tick
 -- Get a paddle
 getPaddle ::    Stream Tick
                 -> Paddle
+                -> Speed
                 -> {
                      cPosition :: Cell Position,
                      cTrajectory :: Cell PaddleTrajectory
                    }
-getPaddle sTick paddleType =
+getPaddle sTick paddleType speed =
     {
         cPosition: (\paddle -> paddle.pos) <$> cPaddleState,
         cTrajectory: (\paddle -> paddle.traj) <$> cPaddleState
@@ -40,25 +41,25 @@ getPaddle sTick paddleType =
                 pos: initialPosition, 
                 traj: PaddleTrajectory 0.0 0.0 initialPosition
             }
-        cPaddleState = accum updatePaddle initialPaddle sTick
+        cPaddleState = accum (updatePaddle speed) initialPaddle sTick
 
-updatePaddle :: Tick -> PaddleState -> PaddleState
-updatePaddle tick state = case tick of
+updatePaddle :: Speed -> Tick -> PaddleState -> PaddleState
+updatePaddle speed tick state = case tick of
     (ControllerTick controller _) ->
-        updateTrajectory time controller state #
+        updateTrajectory speed time controller state #
         updateMotion time
     _ -> 
         updateMotion time state
     where 
         time = toTime tick
 
-updateTrajectory :: Time -> Controller -> PaddleState -> PaddleState
-updateTrajectory startTime controller state = state {traj = newTraj}
+updateTrajectory :: Speed -> Time -> Controller -> PaddleState -> PaddleState
+updateTrajectory speed startTime controller state = state {traj = newTraj}
     where 
         pos = state.pos
         newTraj = case controller of
-            UP -> PaddleTrajectory startTime constants.paddleSpeed pos
-            DOWN -> PaddleTrajectory startTime (constants.paddleSpeed * -1.0) pos
+            UP -> PaddleTrajectory startTime speed pos
+            DOWN -> PaddleTrajectory startTime (speed * -1.0) pos
             NEUTRAL -> PaddleTrajectory startTime 0.0 pos 
             _ -> state.traj
 

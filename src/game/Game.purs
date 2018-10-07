@@ -20,7 +20,6 @@ import Game.Types.Tick
 import Game.Tick 
 import Game.Collision
 import Game.Utils.Sodium
-import Game.Ai
 import Game.FFI
 
 {-
@@ -49,7 +48,6 @@ main :: WasmLib
         -> Time 
         -> (Array Renderable -> Effect Unit) 
         -> (String -> Effect Unit) 
-        -> (Position -> Effect Unit)
         -> Effect 
             {
                 sendUpdate :: Time -> Effect Unit,
@@ -58,7 +56,7 @@ main :: WasmLib
                 sendController2 :: String -> Effect Unit
             }
 
-main wasmLib firstTs onRender onCollision onAiTarget = runTransaction do
+main wasmLib firstTs onRender onCollision = runTransaction do
     {- FFI -}
     _ <- assignLib wasmLib
     {- INPUT -}
@@ -85,9 +83,8 @@ main wasmLib firstTs onRender onCollision onAiTarget = runTransaction do
     -- game objects with exported cells
     let ball = getBall ticks.sBall
 
-    let paddle1 = getPaddle ticks.sPaddle1 Paddle1 
-    -- let paddle2 = getPaddle ticks.sPaddle2 Paddle2
-    paddle2 <- getAiPaddle ticks.sPaddle2 ball
+    let paddle1 = getPaddle ticks.sPaddle1 Paddle1 1.0
+    let paddle2 = getPaddle ticks.sPaddle2 Paddle2 0.5
 
     -- collision detection
     sCollision <- getCollision (toStream sExternalUpdate) paddle1.cPosition paddle1.cTrajectory paddle2.cPosition paddle2.cTrajectory ball.cPosition ball.cTrajectory 

@@ -4,6 +4,7 @@ import { getCompileFlags} from "io/utils/Utils";
 import {WorkerCommand,  MESSAGE, Constants, Renderer, Renderable} from "io/types/Types";
 import {startController} from "io/controller/Controller";
 import {setupBackground} from "io/background/Background";
+import {playCollision} from "io/audio/Audio";
 
 const {buildMode, buildVersion, isProduction} = getCompileFlags();
 console.log(`%c FRPong ${buildVersion} (productionMode: ${isProduction})`, 'color: #4286f4; font-size: large; font-family: "Comic Sans MS", cursive, sans-serif');
@@ -64,6 +65,13 @@ worker.addEventListener(MESSAGE, (evt:MessageEvent) => {
             if(firstTime) {
                 startMain();
             }             
+            break;
+        }
+
+        case WorkerCommand.COLLISION_AUDIO: {
+            const {collisionName} = evt.data;
+            playCollision(collisionName);
+
             break;
         }
     }

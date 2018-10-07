@@ -30,11 +30,15 @@ FRPong is a proof-of-concept for architecting a game on the web.
 * Passes input controller and tick updates 
 * Typescript
 
-# Notes
-
-* Purposefully over-engineered - though I dunno, this also kinda feels like a cool starting point? 
-* The multi-threading is probably pointless and wasteful in this case, but it doesn't really hurt afaik
-* With upcoming offscreenCanvas, might separate rendering into its own thread too
-* Different webpack modes ("dev", "build" and "bundle") - as well as travis setup for deployment
+# Future ideas
+* Better / genuine AI (all the data is there, just gotta use it!)
+* With upcoming offscreenCanvas support, might separate rendering into its own thread too
 * Could use a renderer built for functional pipelines, like [pure3d](https://github.com/dakom/pure3d)
+* Showcase more power of webgl/webaudio - though it's easy to get carried away once that door is opened ;)
+
+# Misc Notes
+
+* Experimental and purposefully over-engineered - though I dunno, this also kinda feels like a cool starting point? 
+* The multi-threading is probably pointless and wasteful in this case, but it doesn't really hurt afaik
+* Different webpack modes ("dev", "build" and "bundle") - as well as travis setup for deployment
 * It might be worth exploring state serialization via flatbuffers and then using that to transfer across all boundaries (even to the wasm layer)

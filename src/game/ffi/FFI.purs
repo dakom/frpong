@@ -39,9 +39,6 @@ paddle_traj_pos t s p i bl tl = runFn6 paddle_traj_posImpl t s p i bl tl
 paddle_traj_time :: Number -> Number -> Number -> Number -> Number
 paddle_traj_time n s p i = runFn4 paddle_traj_timeImpl n s p i
 
-ai_traj_pos :: Number -> Number -> Number -> Number -> Number
-ai_traj_pos p b bl tl = runFn4 ai_traj_posImpl p b bl tl
-
 foreign import data WasmLib :: Type
 foreign import assignLibImpl :: EffectFn1 WasmLib Unit
 
@@ -49,5 +46,3 @@ foreign import ball_traj_posImpl :: Fn4 Number Number Number Number Number
 foreign import ball_traj_timeImpl :: Fn4 Number Number Number Number Number 
 foreign import paddle_traj_posImpl :: Fn6 Number Number Number Number Number Number Number
 foreign import paddle_traj_timeImpl :: Fn4 Number Number Number Number Number 
-
-foreign import ai_traj_posImpl :: Fn4 Number Number Number Number Number 

@@ -1,43 +1,31 @@
 import {WorkerCommand, MESSAGE} from "io/types/Worker-Types";
-import {ControllerValue} from "io/types/Controller-Types";
 import {Renderable} from "io/types/Renderable-Types";
+import {ControllerValue} from "io/types/Controller-Types";
+import {makeUpdater} from "./ai/Ai";
 import {getWasm} from "./Wasm-Loader";
 
-const controllerLookup = new Map<number, ControllerValue>();
-controllerLookup.set(-1, ControllerValue.DOWN);
-controllerLookup.set(0, ControllerValue.NEUTRAL);
-controllerLookup.set(1, ControllerValue.UP);
 
 let wasmLib;
 let workersPending = 1;
 let controller;
+let onUpdate;
 
-let lastTargetPos;
-
-const sendController = (_controller:number) => {
+const sendController = (_controller:ControllerValue) => {
     if(controller !== _controller) {
         controller = _controller;
 
         (self as any).postMessage({
             cmd: WorkerCommand.AI_CONTROLLER,
-            controller: controllerLookup.get(controller)
+            controller 
         });
     }
-}
-
-const onState= ({paddleY, targetPos}) => {
-    // console.log(renderables[0].x, renderables[0].y);
-    //if(!lastTargetPos || lastTargetPos.y !== targetPos.y) {
-    if(Math.abs(targetPos.y - paddleY) > 5) {
-        sendController(wasmLib.ai_controller(targetPos.y, paddleY));
-    }
-    //    lastTargetPos = targetPos;
-    //} 
 }
 
 //We don't know whether wasm-loading or worker-setup happens first
 const startIfReady = () => {
     if(wasmLib != null && !workersPending) {
+        onUpdate = makeUpdater (wasmLib) (sendController);
+
         (self as any).postMessage({
             cmd: WorkerCommand.WORKER_READY,
         })
@@ -57,8 +45,8 @@ getWasm().then(_wasmLib => {
             workersPending--;
             startIfReady();
             break;
-        case WorkerCommand.AI_STATE:
-            onState(evt.data);
+        case WorkerCommand.AI_UPDATE:
+            onUpdate(evt.data);
             break;
     }
 });

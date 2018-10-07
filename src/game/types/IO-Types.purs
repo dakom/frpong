@@ -9,7 +9,6 @@ type Constants =
         paddleWidth :: Number,
         paddleHeight :: Number,
         paddleMargin :: Number,
-        paddleSpeed :: Number,
      
         canvasWidth :: Number,
         canvasHeight :: Number

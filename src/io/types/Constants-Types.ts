@@ -4,7 +4,6 @@ export interface Constants {
     paddleWidth: number; 
     paddleHeight: number; 
     paddleMargin: number; 
-    paddleSpeed: number; 
     canvasWidth: number; 
     canvasHeight: number;
 }
