@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/dakom/frpong.svg?branch=master)](https://travis-ci.org/dakom/frpong)
 
 
-# Work-in-progress... not playable yet!
+# Work-in-progress...but playable! 
 
 # [Live Demo](https://dakom.github.io/frpong)
 ----
