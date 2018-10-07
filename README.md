@@ -36,9 +36,9 @@ FRPong is a proof-of-concept for architecting a game on the web.
 * Could use a renderer built for functional pipelines, like [pure3d](https://github.com/dakom/pure3d)
 * Showcase more power of WebGL/WebAudio - though it's easy to get carried away once that door is opened ;)
   * Tentative ideas: 
-  * [] bloom+CRT+barrel distortion w/ TV graphic border
-  * [] spatial audio
-  * [] particle emitter on collision points
+  * [ ] bloom+CRT+barrel distortion w/ TV graphic border
+  * [ ] spatial audio
+  * [ ] particle emitter on collision points
 
 
 # Misc Notes
