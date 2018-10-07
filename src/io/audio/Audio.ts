@@ -1,5 +1,5 @@
 const createContext = () => {
-	const ctor = window.AudioContext || window.webkitAudioContext || undefined;
+	const ctor = (window as any).AudioContext || (window as any).webkitAudioContext || undefined;
 	if (!ctor) {
     alert("Sorry, but the Web Audio API is not supported by your browser.");
 	}
