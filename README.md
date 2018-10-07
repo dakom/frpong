@@ -8,10 +8,10 @@
 
 FRPong is a proof-of-concept for architecting a game on the web.
 
-**Controlls**
+## Controls
 
-* Serve Ball: Space
-* Move Paddle: up/w or down/s
+* Serve Ball: **Space**
+* Move Paddle: **up/w** or **down/s**
 
 # Tech Specs
 
@@ -34,7 +34,12 @@ FRPong is a proof-of-concept for architecting a game on the web.
 * Better / genuine AI (all the data is there, just gotta use it!)
 * With upcoming offscreenCanvas support, might separate rendering into its own thread too
 * Could use a renderer built for functional pipelines, like [pure3d](https://github.com/dakom/pure3d)
-* Showcase more power of webgl/webaudio - though it's easy to get carried away once that door is opened ;)
+* Showcase more power of WebGL/WebAudio - though it's easy to get carried away once that door is opened ;)
+  * Tentative ideas: 
+  * [] bloom+CRT+barrel distortion w/ TV graphic border
+  * [] spatial audio
+  * [] particle emitter on collision points
+
 
 # Misc Notes
 
