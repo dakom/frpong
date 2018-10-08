@@ -14,12 +14,12 @@ controllerLookup.set(0, ControllerValue.DOWN);
 controllerLookup.set(1, ControllerValue.NEUTRAL);
 controllerLookup.set(2, ControllerValue.UP);
 
-let history:State;
+let history:State & {controllerInt : number}
 
 export const makeUpdater = wasmLib => (sendController:(val:ControllerValue) => void) => (state:State) => {
-
+    let controllerInt = 1;
     if(history) {
-        const controllerInt =
+        controllerInt =
             wasmLib.ai_controller(
                 state.ball_x,
                 state.ball_y,
@@ -32,16 +32,13 @@ export const makeUpdater = wasmLib => (sendController:(val:ControllerValue) => v
                 history.paddle1_x,
                 history.paddle1_y,
                 history.paddle2_x,
-                history.paddle2_y
+                history.paddle2_y,
+                history.controllerInt
             );
 
 
         sendController (controllerLookup.get(controllerInt));
     } 
-    history = state;
+    history = Object.assign({}, state, {controllerInt});
 }
 
-const diffValue = (diff:number):ControllerValue =>
-    diff < 0 ? ControllerValue.DOWN
-    : diff > 0 ? ControllerValue.UP
-    : ControllerValue.NEUTRAL;

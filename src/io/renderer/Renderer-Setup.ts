@@ -1,7 +1,7 @@
-import {Renderer, Constants} from "io/types/Types";
+import {Renderer, Constants, Scoreboard} from "io/types/Types";
 import {createRenderThunk} from "./Render-Thunk";
 import {createCamera} from "./camera/Camera";
-import {createTextures} from "io/renderer/textures/Textures";
+import {createSpriteTextures} from "io/renderer/textures/Textures";
 import vertexShader from "./shaders/Quad-Shader-Vertex.glsl";
 import fragmentShader from "./shaders/Quad-Shader-Fragment.glsl";
 
@@ -14,7 +14,7 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
         return;
     }
 
-    createTextures (constants) (gl);
+    createSpriteTextures (constants) (gl);
     gl.clearColor(0, 0, 0, 0);
     gl.enable (gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -31,7 +31,9 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
     resize();
     window.addEventListener('resize', resize);
 
-    resolve({gl, render, canvas});
+    const renderer = {gl, render, canvas};
+
+    resolve(renderer);
 })
 
 const createCanvas = (constants:Constants) => {

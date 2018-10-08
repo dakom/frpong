@@ -1,9 +1,10 @@
 import MyWorker = require('worker-loader!./Main-Worker');
 import {setupRenderer} from "io/renderer/Renderer-Setup";
 import { getCompileFlags} from "io/utils/Utils";
-import {WorkerCommand,  MESSAGE, Constants, Renderer, Renderable} from "io/types/Types";
+import {RenderableId, WorkerCommand,  MESSAGE, Constants, Renderer, Renderable, Scoreboard} from "io/types/Types";
 import {startController} from "io/controller/Controller";
 import {setupBackground} from "io/background/Background";
+import {createScoreboard} from "io/scoreboard/Scoreboard";
 import {playCollision} from "io/audio/Audio";
 
 const {buildMode, buildVersion, isProduction} = getCompileFlags();
@@ -11,9 +12,11 @@ console.log(`%c FRPong ${buildVersion} (productionMode: ${isProduction})`, 'colo
 
 
 let renderer:Renderer;
+let scoreboard:Scoreboard;
 let renderables:Array<Renderable>;
 
 const worker = new (MyWorker as any)();
+
 setupBackground();
 
 const startMain = () => {
@@ -23,7 +26,9 @@ const startMain = () => {
         //1. Avoids needless renders
         //2. Prevents buildup of worker tick messages
         if(renderables != null) {
-            renderer.render(renderables);
+            renderer.render(renderables.concat([{
+                id: RenderableId.SCOREBOARD
+            }]));
             renderables = null;
             worker.postMessage({
                 cmd: WorkerCommand.TICK,
@@ -50,6 +55,7 @@ worker.addEventListener(MESSAGE, (evt:MessageEvent) => {
             const {constants} = evt.data;
             setupRenderer(constants).then(_renderer => {
                 renderer = _renderer;
+                scoreboard = createScoreboard (constants) (renderer);
                 requestAnimationFrame(now => 
                     worker.postMessage({
                         cmd: WorkerCommand.TICK,
@@ -69,7 +75,15 @@ worker.addEventListener(MESSAGE, (evt:MessageEvent) => {
         }
 
         case WorkerCommand.COLLISION_AUDIO: {
+              
             const {collisionName} = evt.data;
+
+            if(collisionName === "leftWall") {
+                scoreboard.addPoint(2);
+            } else if(collisionName === "rightWall") {
+                scoreboard.addPoint(1);
+            }
+
             playCollision(collisionName);
 
             break;

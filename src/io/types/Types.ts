@@ -1,4 +1,5 @@
 export * from "./Camera-Types";
+export * from "./Scoreboard-Types";
 export * from "./Generic-Types";
 export * from "./Renderer-Types";
 export * from "./GameObject-Types";

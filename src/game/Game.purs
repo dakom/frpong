@@ -84,7 +84,7 @@ main wasmLib firstTs onRender onCollision = runTransaction do
     let ball = getBall ticks.sBall
 
     let paddle1 = getPaddle ticks.sPaddle1 Paddle1 1.0
-    let paddle2 = getPaddle ticks.sPaddle2 Paddle2 0.5
+    let paddle2 = getPaddle ticks.sPaddle2 Paddle2 0.9
 
     -- collision detection
     sCollision <- getCollision (toStream sExternalUpdate) paddle1.cPosition paddle1.cTrajectory paddle2.cPosition paddle2.cTrajectory ball.cPosition ball.cTrajectory 

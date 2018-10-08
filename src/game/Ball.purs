@@ -37,17 +37,18 @@ getBall sTick =
         cTrajectory: (\ball -> ball.traj) <$> cBallState
     }
     where
+        cBallState = accum updateBall initialState sTick
+
+initialState :: BallState
+initialState =
+    {
+        pos: initialPosition,
+        vel: initialVelocity, 
+        traj: BallTrajectory 0.0 constants.ballSpeed initialVelocity initialPosition
+    }
+    where
         initialPosition = {x: constants.canvasWidth / 2.0, y: constants.canvasHeight / 2.0}
         initialVelocity = {x: 0.0, y: 0.0}
-        initialBall = 
-            {
-                pos: initialPosition,
-                vel: initialVelocity, 
-                traj: BallTrajectory 0.0 constants.ballSpeed initialVelocity initialPosition
-            }
-        cBallState = accum updateBall initialBall sTick
-
-
 {-
     A ball update is one of three things:
     1. Serve (triggered by controler)
@@ -62,6 +63,10 @@ updateBall tick originalState = case tick of
     (ControllerTick controller time) -> case controller of
         SERVE -> beginServe time 
         _ -> updatePosition time originalState 
+    (CollisionTick (CollisionWall LeftWall info) time) -> 
+        initialState 
+    (CollisionTick (CollisionWall RightWall info) time) -> 
+        initialState 
     (CollisionTick collision time) -> 
         updateVelocity collision originalState #
         updateTrajectory collision time #

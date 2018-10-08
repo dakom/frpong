@@ -38,9 +38,19 @@ export const createRenderThunk = ({gl, canvas, program, camera}:Props) => {
     gl.uniform1i(uSampler, 0);
 
     const render = (sprite:Renderable) => {
-        const textureInfo = textureCache.get(sprite.id);
 
-        mat4.fromTranslation(modelMatrix, [sprite.x - textureInfo.width/2, sprite.y - textureInfo.height/2, 0]);
+        const textureInfo = textureCache.get(sprite.id);
+       
+
+        mat4.fromTranslation(modelMatrix, [
+            sprite.x != null 
+                ? sprite.x - textureInfo.width/2
+                : 0,
+            sprite.y != null
+                ? sprite.y - textureInfo.height/2
+                : 0, 
+            0
+        ]);
         const clipSpace = camera.getModelViewProjection(modelMatrix);
         gl.uniformMatrix4fv(uTransformLocation, false, clipSpace);
         
