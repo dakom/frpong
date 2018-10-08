@@ -6,48 +6,30 @@ import {startController} from "io/controller/Controller";
 import {setupBackground} from "io/background/Background";
 import {createScoreboard} from "io/scoreboard/Scoreboard";
 import {playCollision} from "io/audio/Audio";
+import * as WebFont from "webfontloader";
 
 const {buildMode, buildVersion, isProduction} = getCompileFlags();
 console.log(`%c FRPong ${buildVersion} (productionMode: ${isProduction})`, 'color: #4286f4; font-size: large; font-family: "Comic Sans MS", cursive, sans-serif');
-
 
 let renderer:Renderer;
 let scoreboard:Scoreboard;
 let renderables:Array<Renderable>;
 
-const worker = new (MyWorker as any)();
 
+const worker = new (MyWorker as any)();
 setupBackground();
 
-const startMain = () => {
+WebFont.load({
+    google: {
+      families: ['Press Start 2P']
+    },
+    active: () => {
 
-    const tick = now => {
-        //Checking if the state is fresh serves two purposes:
-        //1. Avoids needless renders
-        //2. Prevents buildup of worker tick messages
-        if(renderables != null) {
-            renderer.render(renderables.concat([{
-                id: RenderableId.SCOREBOARD
-            }]));
-            renderables = null;
-            worker.postMessage({
-                cmd: WorkerCommand.TICK,
-                now
-            });
-        }
-        requestAnimationFrame(tick);
-    }
-
-    requestAnimationFrame(tick);
-
-
-    startController(controller => {
         worker.postMessage({
-            cmd: WorkerCommand.CONTROLLER1,
-            controller
-        })
-    });
-}
+            cmd: WorkerCommand.WORKER_START
+        });
+    }
+})
 
 worker.addEventListener(MESSAGE, (evt:MessageEvent) => {
     switch(evt.data.cmd) {
@@ -91,7 +73,33 @@ worker.addEventListener(MESSAGE, (evt:MessageEvent) => {
     }
 });
 
-worker.postMessage({
-    cmd: WorkerCommand.WORKER_START
-});
+const startMain = () => {
+
+    const tick = now => {
+        //Checking if the state is fresh serves two purposes:
+        //1. Avoids needless renders
+        //2. Prevents buildup of worker tick messages
+        if(renderables != null) {
+            renderer.render(renderables.concat([{
+                id: RenderableId.SCOREBOARD
+            }]));
+            renderables = null;
+            worker.postMessage({
+                cmd: WorkerCommand.TICK,
+                now
+            });
+        }
+        requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+
+
+    startController(controller => {
+        worker.postMessage({
+            cmd: WorkerCommand.CONTROLLER1,
+            controller
+        })
+    });
+}
 

@@ -76,6 +76,7 @@
   },
   "dependencies": {
     "gl-matrix": "^2.8.1",
-    "sodiumjs": "^3.0.0"
+    "sodiumjs": "^3.0.0",
+    "webfontloader": "1.6.28"
   }
 }
