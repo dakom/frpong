@@ -10,16 +10,15 @@ interface State {
 }
 
 const controllerLookup = new Map<number, ControllerValue>();
-controllerLookup.set(0, ControllerValue.DOWN);
-controllerLookup.set(1, ControllerValue.NEUTRAL);
+controllerLookup.set(0, ControllerValue.NEUTRAL);
+controllerLookup.set(1, ControllerValue.DOWN);
 controllerLookup.set(2, ControllerValue.UP);
 
-let history:State & {controllerInt : number}
+let history:State 
 
 export const makeUpdater = wasmLib => (sendController:(val:ControllerValue) => void) => (state:State) => {
-    let controllerInt = 1;
     if(history) {
-        controllerInt =
+        const controllerInt =
             wasmLib.ai_controller(
                 state.ball_x,
                 state.ball_y,
@@ -33,12 +32,12 @@ export const makeUpdater = wasmLib => (sendController:(val:ControllerValue) => v
                 history.paddle1_y,
                 history.paddle2_x,
                 history.paddle2_y,
-                history.controllerInt
             );
 
-
-        sendController (controllerLookup.get(controllerInt));
+        if(controllerInt !== -1) {
+            sendController (controllerLookup.get(controllerInt));
+        }
     } 
-    history = Object.assign({}, state, {controllerInt});
+    history = state;
 }
 
