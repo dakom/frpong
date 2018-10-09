@@ -1,6 +1,7 @@
-import * as loadWasm from "./lib.rs";
+const PATH = "../target/frpong";
 
-export const getWasm = () => 
-    loadWasm().then(wasm => {
-        return wasm.instance.exports; 
-    })
+
+export async function getWasm() {
+    const wasm = await import(PATH);
+    return wasm;
+}

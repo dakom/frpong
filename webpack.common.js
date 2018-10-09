@@ -22,7 +22,7 @@ module.exports = {
             {
                 //enforce: "pre",
                 test: /\.tsx?$/,
-                exclude: ["node_modules"],
+                exclude: /node_modules/,
                 use: [
                     {
                         loader: "ts-loader", 
@@ -30,6 +30,10 @@ module.exports = {
                     },
                     "source-map-loader"
                 ]
+            },
+            {
+                test: /\.wasm$/,
+                type: "webassembly/experimental",
             },
             { test: /\.html$/, loader: "html-loader" },
             { test: /\.scss$/,loaders: ["style-loader", "css-loader","fast-sass-loader"] },

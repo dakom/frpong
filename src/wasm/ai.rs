@@ -1,7 +1,8 @@
+use wasm_bindgen::prelude::*;
 
 static mut WAIT_TICKS:i32 = 0;
 
-#[no_mangle]
+#[wasm_bindgen]
 pub fn ai_controller(ball_x: f64, 
                      ball_y:f64, 
                      paddle1_x: f64,

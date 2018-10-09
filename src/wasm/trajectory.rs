@@ -1,4 +1,4 @@
-
+use wasm_bindgen::prelude::*;
 /*
     t = time
     v = velocity
@@ -10,7 +10,7 @@
     bl = bottom limit
  */
 
-#[no_mangle]
+#[wasm_bindgen]
 //returns n
 pub fn ball_traj_pos(t:f64, v:f64, p:f64, i:f64) -> f64 {
     if v == 0.0 {
@@ -20,7 +20,7 @@ pub fn ball_traj_pos(t:f64, v:f64, p:f64, i:f64) -> f64 {
     }
 }
 
-#[no_mangle]
+#[wasm_bindgen]
 //returns t
 pub fn ball_traj_time(n:f64, v:f64, p:f64, i:f64) -> f64 {
     if v == 0.0 {
@@ -31,7 +31,7 @@ pub fn ball_traj_time(n:f64, v:f64, p:f64, i:f64) -> f64 {
 }
 
 
-#[no_mangle]
+#[wasm_bindgen]
 //returns n
 pub fn paddle_traj_pos(t:f64, s:f64, p:f64, i:f64, bl:f64, tl:f64) -> f64 {
     if s == 0.0 {
@@ -44,7 +44,7 @@ pub fn paddle_traj_pos(t:f64, s:f64, p:f64, i:f64, bl:f64, tl:f64) -> f64 {
 }
 
 
-#[no_mangle]
+#[wasm_bindgen]
 //returns t
 pub fn paddle_traj_time(n:f64, s:f64, p:f64, i:f64) -> f64 {
     if s == 0.0 {
@@ -53,7 +53,7 @@ pub fn paddle_traj_time(n:f64, s:f64, p:f64, i:f64) -> f64 {
         i + ((n - p)/s)
     }
 }
-#[no_mangle]
+#[wasm_bindgen]
 //returns n
 pub fn ai_traj_pos(previous_y: f64, ball_y:f64, bl:f64, tl:f64) -> f64 {
     let max_distance = 4.5;
