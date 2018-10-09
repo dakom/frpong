@@ -97,7 +97,7 @@ const getScoreboardImage = (constants:Constants) => (text:string) => {
 const createTexture = (gl:WebGLRenderingContext) => (canvas:HTMLCanvasElement):TextureInfo => {
 
     const texture = gl.createTexture();
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
 

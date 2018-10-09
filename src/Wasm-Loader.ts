@@ -1,7 +1,9 @@
-const PATH = "../target/frpong";
-
+function start(mymod: typeof import("../target/frpong")) {
+    console.log("All modules loaded");
+    return mymod;
+}
 
 export async function getWasm() {
-    const wasm = await import(PATH);
-    return wasm;
+    return start(await import("../target/frpong"));
 }
+

@@ -1,4 +1,4 @@
-import MyWorker = require('worker-loader!./Main-Worker');
+//import MyWorker from 'worker-loader!./Main-Worker';
 import {setupRenderer} from "io/renderer/Renderer-Setup";
 import { getCompileFlags} from "io/utils/Utils";
 import {RenderableId, WorkerCommand,  MESSAGE, Constants, Renderer, Renderable, Scoreboard} from "io/types/Types";
@@ -6,7 +6,7 @@ import {startController} from "io/controller/Controller";
 import {setupBackground} from "io/background/Background";
 import {createScoreboard} from "io/scoreboard/Scoreboard";
 import {playCollision} from "io/audio/Audio";
-import * as WebFont from "webfontloader";
+import WebFont from "webfontloader";
 
 const {buildMode, buildVersion, isProduction} = getCompileFlags();
 console.log(`%c FRPong ${buildVersion} (productionMode: ${isProduction})`, 'color: #4286f4; font-size: large; font-family: "Comic Sans MS", cursive, sans-serif');
@@ -15,8 +15,7 @@ let renderer:Renderer;
 let scoreboard:Scoreboard;
 let renderables:Array<Renderable>;
 
-
-const worker = new (MyWorker as any)();
+const worker = new Worker('./mainWorker.js');
 setupBackground();
 
 WebFont.load({

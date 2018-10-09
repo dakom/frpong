@@ -1,10 +1,9 @@
-import AiWorker = require('worker-loader!./Ai-Worker');
 import {WorkerCommand, MESSAGE} from "io/types/Worker-Types";
 import {Renderable} from "io/types/Renderable-Types";
 import {getWasm} from "./Wasm-Loader";
 const psBridge = require("purescript/index"); 
 
-const aiWorker = (AiWorker as any)();
+const aiWorker = new Worker('./aiWorker.js');
 
 const UPDATE_DELAY_MS = 0;
 
