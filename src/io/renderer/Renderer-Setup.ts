@@ -1,7 +1,9 @@
-import {Renderer, Constants, Scoreboard} from "io/types/Types";
+import {Renderer, Renderable, Constants, Scoreboard} from "io/types/Types";
 import {createRenderThunk} from "./Render-Thunk";
 import {createCamera} from "./camera/Camera";
 import {createSpriteTextures} from "io/renderer/textures/Textures";
+import {createPostProcessing} from "./post/PostProcessing-Setup";
+
 import vertexShader from "./shaders/Quad-Shader-Vertex.glsl";
 import fragmentShader from "./shaders/Quad-Shader-Fragment.glsl";
 
@@ -21,8 +23,14 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
 
     const camera = createCamera(constants);
     const resizeDisplay = createResizer ({gl, canvas, constants});
-    const render = createRenderThunk({gl, canvas, program, camera});
+    const renderScene = createRenderThunk({gl, canvas, program, camera});
+    const postProcessing = createPostProcessing ({gl, canvas, program, camera, constants}); 
 
+    const render = (renderables:Array<Renderable>) => {
+        postProcessing.drawScene(() => renderScene(renderables));
+        postProcessing.process();
+        postProcessing.show();
+    }
 
     const resize = () => {
         //no need to resize camera, we're at a locked view

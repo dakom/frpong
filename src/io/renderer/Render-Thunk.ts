@@ -66,7 +66,6 @@ export const createRenderThunk = ({gl, canvas, program, camera}:Props) => {
     }
 
     return (renderables:Array<Renderable>) => {
-        gl.clear(gl.COLOR_BUFFER_BIT);
         renderables.forEach(render);
     }
 }
