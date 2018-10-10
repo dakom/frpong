@@ -23,7 +23,7 @@ install:
   - nvm use node
   - rustup target add wasm32-unknown-unknown
   - (test -x $HOME/.cargo/bin/wasm-gc || cargo install wasm-gc)
-  - (test -x $HOME/.cargo/bin/wasm-bindgen || cargo install wasm-bindgen)
+  - (test -x $HOME/.cargo/bin/wasm-bindgen || cargo install wasm-bindgen-cli)
   - TAG=v0.12.0
   - PSC_PACKAGE_TAG=v0.4.2
   - wget -O $HOME/purescript.tar.gz https://github.com/purescript/purescript/releases/download/$TAG/linux64.tar.gz
