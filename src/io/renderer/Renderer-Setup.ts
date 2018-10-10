@@ -4,17 +4,26 @@ import {createCamera} from "./camera/Camera";
 import {createSpriteTextures} from "io/renderer/textures/Textures";
 import {createPostProcessing} from "./post/PostProcessing-Setup";
 
-import vertexShader from "./shaders/Quad-Shader-Vertex.glsl";
-import fragmentShader from "./shaders/Quad-Shader-Fragment.glsl";
+import quadVertexShader from "./shaders/Quad-Shader-Vertex.glsl";
+import quadFragmentShader from "./shaders/Quad-Shader-Fragment.glsl";
+
+import convVertexShader from "./shaders/Convolution-Shader-Vertex.glsl";
+import convFragmentShader from "./shaders/Convolution-Shader-Fragment.glsl";
 
 export const setupRenderer = (constants:Constants) => new Promise<Renderer>((resolve, reject) => {
     const canvas = createCanvas(constants);
     const gl = createContext(canvas) ({ premultipliedAlpha: false});
-    const program = compileShader (gl) ({vertex: vertexShader, fragment: fragmentShader});
-    if(program instanceof Error) {
-        reject(program);
+    const programs = [
+        {vertex: quadVertexShader, fragment: quadFragmentShader},
+        {vertex: convVertexShader, fragment: convFragmentShader}
+    ].map(compileShader(gl));
+
+    const programError = programs.find(program => program instanceof Error);
+    if(programError) {
+        reject(programError);
         return;
     }
+
 
     createSpriteTextures (constants) (gl);
     gl.clearColor(0, 0, 0, 0);
@@ -23,12 +32,15 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
 
     const camera = createCamera(constants);
     const resizeDisplay = createResizer ({gl, canvas, constants});
-    const renderScene = createRenderThunk({gl, canvas, program, camera});
-    const postProcessing = createPostProcessing ({gl, canvas, program, camera, constants}); 
+    const renderScene = createRenderThunk({gl, canvas, program: programs[0], camera});
+    const postProcessing = createPostProcessing ({gl, canvas, programs, camera, constants}); 
 
     const render = (renderables:Array<Renderable>) => {
         postProcessing.drawScene(() => renderScene(renderables));
         postProcessing.process();
+
+        //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        //renderScene(renderables);
         postProcessing.show();
     }
 

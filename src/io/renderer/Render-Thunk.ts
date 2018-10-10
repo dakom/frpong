@@ -11,6 +11,8 @@ interface Props {
 
 //Because this is our only shader, gpu values can be setup and assumed to stay that way
 export const createRenderThunk = ({gl, canvas, program, camera}:Props) => {
+    gl.useProgram(program);
+
     const sizeMatrix = mat4.create();
     const modelMatrix = mat4.create();
 
@@ -66,6 +68,7 @@ export const createRenderThunk = ({gl, canvas, program, camera}:Props) => {
     }
 
     return (renderables:Array<Renderable>) => {
+
         renderables.forEach(render);
     }
 }

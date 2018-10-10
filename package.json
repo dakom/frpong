@@ -5,26 +5,20 @@
   "main": "index.js",
   "scripts": {
     "clean": "rimraf ./dist && rimraf ./output && rimraf ./target",
-
     "bundle": "npm run build:prod && cross-env NODE_ENV=production webpack --progress --config webpack.prod.js && cp -R ./site/static ./dist/ && cp ./site/_redirects ./dist/",
     "dev": "npm run build:dev && npm-run-all -p _dev:webpack-server _dev:watch:rust",
     "_dev:webpack-server": "cross-env NODE_ENV=dev-auto-reload webpack-dev-server --progress --open --config webpack.dev.js",
     "_dev:watch:rust": "chokidar \"**/*.rs\" -c \"npm run build:rust:dev\"",
-
     "build:dev": "npm run build:purs:dev && npm run build:rust:dev",
     "build:prod": "npm run clean && npm run build:purs:prod && npm run build:rust:prod",
-
     "build:purs:dev": "pulp --psc-package build && echo \"export * from './Main/index.js'\" > ./output/index.js",
     "build:purs:prod": "pulp --psc-package build --skip-entry-point --optimise --to ./output/index.js && echo \"module.exports = PS.Main\" >> ./output/index.js",
-
     "build:rust:prod": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run rust:bindgen:release",
     "build:rust:dev": "cargo +nightly build --target wasm32-unknown-unknown && npm run rust:bindgen:dev",
     "rust:bindgen:dev": "wasm-bindgen target/wasm32-unknown-unknown/debug/frpong.wasm --out-dir ./target",
     "rust:bindgen:release": "wasm-bindgen target/wasm32-unknown-unknown/release/frpong.wasm --out-dir ./target",
-
     "test:jest": "jest test/typescript-tests",
     "test:pulp": "pulp test",
-
     "dist:server": "http-server ./dist -o"
   },
   "jest": {
@@ -88,6 +82,7 @@
     "worker-loader": "2.0.0"
   },
   "dependencies": {
+    "chokidar-cli": "^1.2.1",
     "gl-matrix": "^2.8.1",
     "sodiumjs": "^3.0.0",
     "webfontloader": "1.6.28"
