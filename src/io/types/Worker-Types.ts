@@ -11,6 +11,6 @@ export enum WorkerCommand {
     CONTROLLER2, //Same as AI_CONTROLLER but could be made to player 2 
     AI_UPDATE, // Sent from Main-Worker to AI-Worker on state update
     AI_CONTROLLER, // Sent from AI-Worker on controller update
-    COLLISION_AUDIO,
+    COLLISION,
                     
 }

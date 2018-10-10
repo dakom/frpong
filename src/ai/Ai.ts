@@ -1,4 +1,5 @@
 import {ControllerValue} from "io/types/Controller-Types";
+import {Constants} from "io/types/Constants-Types";
 
 interface State {
     ball_x: number;
@@ -15,11 +16,18 @@ controllerLookup.set(1, ControllerValue.DOWN);
 controllerLookup.set(2, ControllerValue.UP);
 
 let history:State 
+let wasmLib;
+let constants:Constants;
 
-export const makeUpdater = wasmLib => (sendController:(val:ControllerValue) => void) => (state:State) => {
+export const setWasmLib = _wasmLib => wasmLib = _wasmLib;
+export const setConstants = _constants => constants = _constants;
+
+export const makeAiControllerUpdater = (sendController:(val:ControllerValue) => void) => (state:State) => {
     if(history) {
         const controllerInt =
             wasmLib.ai_controller(
+                constants.ballRadius,
+                constants.paddleHeight,
                 state.ball_x,
                 state.ball_y,
                 state.paddle1_x,
@@ -41,3 +49,7 @@ export const makeUpdater = wasmLib => (sendController:(val:ControllerValue) => v
     history = state;
 }
 
+export const makeAiCollisionUpdater = () => (collisionName:string) => {
+    const delay = Math.floor(Math.random() * 24);
+    wasmLib.ai_update_delay(delay);
+}

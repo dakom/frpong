@@ -50,7 +50,6 @@ const browserConfig = Object.assign({}, commonConfig, {
         filename: "[name].bundle.js",
         sourceMapFilename: "[name].bundle.map",
         publicPath: '',
-        globalObject: `(typeof self !== 'undefined' ? self : this)`,
     },
 
     plugins: [
@@ -79,6 +78,7 @@ const mainWorkerConfig = Object.assign({}, commonConfig, {
     entry: path.resolve('./src/Main-Worker.ts'),
     output: {
         path: path.resolve(__dirname, "dist"),
+        publicPath: "",
         filename: "mainWorker.js",
         //globalObject: `(typeof self !== 'undefined' ? self : this)`,
     },
@@ -100,6 +100,7 @@ const aiWorkerConfig = Object.assign({}, commonConfig, {
     entry: path.resolve('./src/Ai-Worker.ts'),
     output: {
         path: path.resolve(__dirname, "dist"),
+        publicPath: "",
         filename: "aiWorker.js",
         //globalObject: `(typeof self !== 'undefined' ? self : this)`,
     },

@@ -3,17 +3,18 @@ const common = require('./webpack.common.js');
 const path = require('path');
 const webpack = require('webpack');
 
+//common settings on all configurations
 const extend = target => {
     const extended = Object.assign({}, target, {
         mode: "development",
         devtool: "inline-source-map",
     });
-    if(process.env["NODE_ENV"] === "dev-auto-reload") {
-        extended.module.rules.push({test: path.resolve(__dirname, 'node_modules/webpack-dev-server/client'), loader: "null-loader"});
-    }
+    
+    extended.module.rules.push({test: path.resolve(__dirname, 'node_modules/webpack-dev-server/client'), loader: "null-loader"});
     return extended;
 }
 
+//separate configurations
 const browserConfig = merge(extend(common.browserConfig), {
     devServer: {
         //contentBase: path.join(__dirname, "dist/"),
@@ -23,7 +24,8 @@ const browserConfig = merge(extend(common.browserConfig), {
         headers: { "Access-Control-Allow-Origin": "*" },
         historyApiFallback: {
             disableDotRule: true
-        }
+        },
+        watchContentBase: true,
     },
     plugins: [
         

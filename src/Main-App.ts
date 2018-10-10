@@ -9,6 +9,7 @@ import {playCollision} from "io/audio/Audio";
 import WebFont from "webfontloader";
 
 const {buildMode, buildVersion, isProduction} = getCompileFlags();
+
 console.log(`%c FRPong ${buildVersion} (productionMode: ${isProduction})`, 'color: #4286f4; font-size: large; font-family: "Comic Sans MS", cursive, sans-serif');
 
 let renderer:Renderer;
@@ -55,7 +56,7 @@ worker.addEventListener(MESSAGE, (evt:MessageEvent) => {
             break;
         }
 
-        case WorkerCommand.COLLISION_AUDIO: {
+        case WorkerCommand.COLLISION: {
               
             const {collisionName} = evt.data;
 

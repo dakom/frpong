@@ -73,8 +73,13 @@ const onRender = (renderables:Array<Renderable>) => () => {
 }
 
 const onCollision = (collisionName:string) => () => {
+
+    aiWorker.postMessage({
+        cmd: WorkerCommand.COLLISION,
+        collisionName
+    });
     (self as any).postMessage({
-        cmd: WorkerCommand.COLLISION_AUDIO,
+        cmd: WorkerCommand.COLLISION,
         collisionName
     });
 }
@@ -111,7 +116,8 @@ aiWorker.addEventListener(MESSAGE, (evt:MessageEvent) => {
 });
 
 aiWorker.postMessage({
-    cmd: WorkerCommand.WORKER_START
+    cmd: WorkerCommand.WORKER_START,
+    constants: psBridge.constants
 });
 
 (self as any).addEventListener(MESSAGE, (evt:MessageEvent) => {

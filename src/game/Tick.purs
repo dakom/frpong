@@ -30,8 +30,8 @@ getTicks sTime sCollisionValue sController1String sController2String = do
     let sController2 = getControllerTick cTime sController2String
     pure {
         sBall : orElse sController1 (orElse sCollision sTick),
-        sPaddle1 : orElse sController1 sTick,
-        sPaddle2 : orElse sController2 sTick
+        sPaddle1 : orElse sController1 (orElse sCollision sTick),
+        sPaddle2 : orElse sController2 (orElse sCollision sTick)
     }
 
 

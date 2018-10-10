@@ -16,8 +16,8 @@ import Game.Types.Controller
 import Game.Types.Tick
 import Game.Trajectory
 import Game.Tick
-
-
+import Game.Types.Environment
+import Game.Types.Collision
 
 -- Get a paddle
 getPaddle ::    Stream Tick
@@ -33,18 +33,26 @@ getPaddle sTick paddleType speed =
         cTrajectory: (\paddle -> paddle.traj) <$> cPaddleState
     }
     where
+          cPaddleState = accum (updatePaddle paddleType speed) (initialState paddleType) sTick
+
+initialState :: Paddle -> PaddleState
+initialState paddleType =
+    {
+        pos: initialPosition, 
+        traj: PaddleTrajectory 0.0 0.0 initialPosition
+    }
+    where
         initialPosition = case paddleType of
             Paddle1 -> {x: paddle1x, y: constants.canvasHeight / 2.0}
             Paddle2 -> {x: paddle2x, y: constants.canvasHeight / 2.0}
-        initialPaddle = 
-            {
-                pos: initialPosition, 
-                traj: PaddleTrajectory 0.0 0.0 initialPosition
-            }
-        cPaddleState = accum (updatePaddle speed) initialPaddle sTick
 
-updatePaddle :: Speed -> Tick -> PaddleState -> PaddleState
-updatePaddle speed tick state = case tick of
+
+updatePaddle :: Paddle -> Speed -> Tick -> PaddleState -> PaddleState
+updatePaddle paddleType speed tick state = case tick of
+    (CollisionTick (CollisionWall LeftWall _) _) -> 
+        initialState paddleType
+    (CollisionTick (CollisionWall RightWall _) _) -> 
+        initialState paddleType
     (ControllerTick controller _) ->
         updateTrajectory speed time controller state #
         updateMotion time

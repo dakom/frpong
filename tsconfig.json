@@ -1,7 +1,7 @@
 {
     "compileOnSave": true,
     "compilerOptions": {
-        "module": "esNext",
+        "module": "esnext",
         "baseUrl": ".",
         "paths": {
             "*": [
@@ -13,13 +13,13 @@
             "purescript/*": ["output/*"],
             "game/*": ["src/game/*"]
         },
+        "moduleResolution": "node",
         "skipLibCheck": true,
         "outDir": "dist/tsc",
         "noImplicitAny": false,
         "preserveConstEnums": true,
         "sourceMap": true,
         "target": "es5",
-        "esModuleInterop": true,
         "jsx": "react",
         "lib": [
             "es6",
