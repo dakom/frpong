@@ -6,7 +6,6 @@ import {setWasmLib, setConstants, makeAiControllerUpdater, makeAiCollisionUpdate
 import {getWasm} from "./Wasm-Loader";
 
 
-
 let wasmLib;
 let workersPending = 1;
 let controller;

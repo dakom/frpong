@@ -20,7 +20,6 @@ pub fn ai_controller(
                      history_paddle2_y:f64
                      ) -> i32 
 {
-
     //If there are remaining delay ticks, controller is neutral
     unsafe {
         if BALL_DELAY_TICKS != 0 {

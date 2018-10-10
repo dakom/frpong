@@ -10,7 +10,7 @@ const extend = target => {
         devtool: "inline-source-map",
     });
     
-    extended.module.rules.push({test: path.resolve(__dirname, 'node_modules/webpack-dev-server/client'), loader: "null-loader"});
+    
     return extended;
 }
 
