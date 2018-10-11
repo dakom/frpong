@@ -1,30 +1,38 @@
-import {Renderer, Renderable, Constants, Scoreboard} from "io/types/Types";
-import {createRenderThunk} from "./Render-Thunk";
+import {Renderer, RendererPrograms, Renderable, Constants, Scoreboard} from "io/types/Types";
+import {createSceneThunk} from "./thunks/Scene-Thunk";
 import {createCamera} from "./camera/Camera";
 import {createSpriteTextures} from "io/renderer/textures/Textures";
-import {createPostProcessing} from "./post/PostProcessing-Setup";
+import {createPostProcessing} from "./PostProcessing-Setup";
 
 import quadVertexShader from "./shaders/Quad-Shader-Vertex.glsl";
-import quadFragmentShader from "./shaders/Quad-Shader-Fragment.glsl";
 
-import convVertexShader from "./shaders/Convolution-Shader-Vertex.glsl";
+import quadFragmentShader from "./shaders/Quad-Shader-Fragment.glsl";
 import convFragmentShader from "./shaders/Convolution-Shader-Fragment.glsl";
+import barrelFragmentShader from "./shaders/Barrel-Shader-Fragment.glsl";
+
+import crtShader from "./shaders/CRT-Shader.glsl";
 
 export const setupRenderer = (constants:Constants) => new Promise<Renderer>((resolve, reject) => {
     const canvas = createCanvas(constants);
     const gl = createContext(canvas) ({ premultipliedAlpha: false});
-    const programs = [
+    const programList = [
         {vertex: quadVertexShader, fragment: quadFragmentShader},
-        {vertex: convVertexShader, fragment: convFragmentShader}
+        {vertex: quadVertexShader, fragment: convFragmentShader},
+        {vertex: quadVertexShader, fragment: barrelFragmentShader},
+        //{vertex: "#define VERTEX\n" + crtShader, fragment: "#define FRAGMENT\n" + crtShader}
     ].map(compileShader(gl));
 
-    const programError = programs.find(program => program instanceof Error);
+    const programError = programList.find(program => program instanceof Error);
     if(programError) {
         reject(programError);
         return;
     }
 
-
+    const programs:RendererPrograms = {
+        scene: programList[0] as WebGLProgram,
+        conv: programList[1] as WebGLProgram,
+        barrel: programList[2] as WebGLProgram,
+    }
     createSpriteTextures (constants) (gl);
     gl.clearColor(0, 0, 0, 0);
     gl.enable (gl.BLEND);
@@ -32,16 +40,11 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
 
     const camera = createCamera(constants);
     const resizeDisplay = createResizer ({gl, canvas, constants});
-    const renderScene = createRenderThunk({gl, canvas, program: programs[0], camera});
+    const renderScene = createSceneThunk({gl, constants, canvas, program: programs.scene, camera});
     const postProcessing = createPostProcessing ({gl, canvas, programs, camera, constants}); 
 
     const render = (renderables:Array<Renderable>) => {
-        postProcessing.drawScene(() => renderScene(renderables));
-        postProcessing.process();
-
-        //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        //renderScene(renderables);
-        postProcessing.show();
+        postProcessing.render(() => renderScene(renderables));
     }
 
     const resize = () => {

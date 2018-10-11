@@ -1,11 +1,11 @@
-attribute vec2 a_Vertex;
+attribute vec2 a_vertex;
     
-varying vec2 v_TexCoord;
+varying vec2 v_texCoord;
     
-uniform mat4 u_Transform;
-uniform mat4 u_Size;
+uniform mat4 u_transform;
+uniform mat4 u_size;
     
 void main() {     
-    gl_Position = u_Transform * (u_Size * vec4(a_Vertex,0,1));
-    v_TexCoord = a_Vertex;
+    gl_Position = u_transform * (u_size * vec4(a_vertex,0,1));
+    v_texCoord = a_vertex;
 }

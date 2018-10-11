@@ -1,16 +1,8 @@
-import {Renderable, Camera} from "io/types/Types";
+import {Renderable, CommonRenderProps} from "io/types/Types";
 import {textureCache} from "io/renderer/textures/Textures";
 import {mat4} from "gl-matrix";
 
-interface Props {
-    gl: WebGLRenderingContext; 
-    canvas:HTMLCanvasElement;
-    program:WebGLProgram;
-    camera:Camera;
-}
-
-//Because this is our only shader, gpu values can be setup and assumed to stay that way
-export const createRenderThunk = ({gl, canvas, program, camera}:Props) => {
+export const createSceneThunk = ({gl, canvas, program, camera}:CommonRenderProps) => {
     gl.useProgram(program);
 
     const sizeMatrix = mat4.create();
@@ -29,15 +21,15 @@ export const createRenderThunk = ({gl, canvas, program, camera}:Props) => {
         gl.STATIC_DRAW
     );
 
-    const aVertexLocation = gl.getAttribLocation(program, "a_Vertex");
+    const aVertexLocation = gl.getAttribLocation(program, "a_vertex");
     gl.vertexAttribPointer(aVertexLocation , 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(aVertexLocation);
 
-    const uSizeLocation = gl.getUniformLocation(program, "u_Size");
-    const uTransformLocation = gl.getUniformLocation(program, "u_Transform");
-    const uSampler = gl.getUniformLocation(program, "u_Sampler");
+    const uSizeLocation = gl.getUniformLocation(program, "u_size");
+    const uTransformLocation = gl.getUniformLocation(program, "u_transform");
+    const uImage= gl.getUniformLocation(program, "u_image");
 
-    gl.uniform1i(uSampler, 0);
+    gl.uniform1i(uImage, 0);
 
     const render = (sprite:Renderable) => {
 
