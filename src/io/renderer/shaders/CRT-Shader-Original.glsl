@@ -1,3 +1,4 @@
+
 /*
     crt-pi - A Raspberry Pi friendly CRT shader.
 
@@ -25,6 +26,8 @@ BLOOM_FACTOR controls the increase in width for bright scanlines.
 
 MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how much the mask type darkens the screen.
 
+*/
+
 #pragma parameter CURVATURE_X "Screen curvature - horizontal" 0.10 0.0 1.0 0.01
 #pragma parameter CURVATURE_Y "Screen curvature - vertical" 0.15 0.0 1.0 0.01
 #pragma parameter MASK_BRIGHTNESS "Mask brightness" 0.70 0.0 1.0 0.01
@@ -33,8 +36,6 @@ MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how 
 #pragma parameter BLOOM_FACTOR "Bloom factor" 1.5 0.0 5.0 0.01
 #pragma parameter INPUT_GAMMA "Input gamma" 2.4 0.0 5.0 0.01
 #pragma parameter OUTPUT_GAMMA "Output gamma" 2.2 0.0 5.0 0.01
-*/
-
 
 // Haven't put these as parameters as it would slow the code down.
 #define SCANLINES
@@ -47,9 +48,23 @@ MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how 
 #define MASK_TYPE 1
 
 
+#ifdef GL_ES
 #define COMPAT_PRECISION mediump
 precision mediump float;
+#else
+#define COMPAT_PRECISION
+#endif
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float CURVATURE_X;
+uniform COMPAT_PRECISION float CURVATURE_Y;
+uniform COMPAT_PRECISION float MASK_BRIGHTNESS;
+uniform COMPAT_PRECISION float SCANLINE_WEIGHT;
+uniform COMPAT_PRECISION float SCANLINE_GAP_BRIGHTNESS;
+uniform COMPAT_PRECISION float BLOOM_FACTOR;
+uniform COMPAT_PRECISION float INPUT_GAMMA;
+uniform COMPAT_PRECISION float OUTPUT_GAMMA;
+#else
 #define CURVATURE_X 0.10
 #define CURVATURE_Y 0.25
 #define MASK_BRIGHTNESS 0.70
@@ -58,142 +73,151 @@ precision mediump float;
 #define BLOOM_FACTOR 1.5
 #define INPUT_GAMMA 2.4
 #define OUTPUT_GAMMA 2.2
+#endif
 
+/* COMPATIBILITY
+   - GLSL compilers
+*/
 
 uniform vec2 TextureSize;
 #if defined(CURVATURE)
-    varying vec2 screenScale;
+varying vec2 screenScale;
 #endif
 varying vec2 TEX0;
 varying float filterWidth;
 
-
 #if defined(VERTEX)
-    attribute vec2 a_vertex;
-    varying vec2 v_texCoord;
-    uniform mat4 u_transform;
-    uniform mat4 u_size;
+uniform mat4 MVPMatrix;
+attribute vec4 VertexCoord;
+attribute vec2 TexCoord;
+uniform vec2 InputSize;
+uniform vec2 OutputSize;
 
-    void main() {
-        #if defined(CURVATURE)
-	    screenScale = 1.0; // TextureSize / InputSize;
-        #endif
-	filterWidth = 1.0 / 3.0; //(InputSize.y / OutputSize.y) / 3.0;
-	TEX0 = v_texCoord;
-        gl_Position = u_transform * (u_size * vec4(a_vertex,0,1));
-    }
+void main()
+{
+#if defined(CURVATURE)
+	screenScale = TextureSize / InputSize;
 #endif
+	filterWidth = (InputSize.y / OutputSize.y) / 3.0;
+	TEX0 = TexCoord;
+	gl_Position = MVPMatrix * VertexCoord;
+}
+#elif defined(FRAGMENT)
 
-#if defined(FRAGMENT)
+uniform sampler2D Texture;
 
-    uniform sampler2D u_image;
+#if defined(CURVATURE)
+vec2 CURVATURE_DISTORTION = vec2(CURVATURE_X, CURVATURE_Y);
+// Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
 
-    #if defined(CURVATURE)
-        vec2 CURVATURE_DISTORTION = vec2(CURVATURE_X, CURVATURE_Y);
-        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
-        vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
-
-        vec2 Distort(vec2 coord) {
-	    coord *= screenScale;
-	    coord -= vec2(0.5);
-	    float rsq = coord.x * coord.x + coord.y * coord.y;
-	    coord += coord * (CURVATURE_DISTORTION * rsq);
-	    coord *= barrelScale;
-	    if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5) {
+vec2 Distort(vec2 coord)
+{
+	coord *= screenScale;
+	coord -= vec2(0.5);
+	float rsq = coord.x * coord.x + coord.y * coord.y;
+	coord += coord * (CURVATURE_DISTORTION * rsq);
+	coord *= barrelScale;
+	if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
 		coord = vec2(-1.0);		// If out of bounds, return an invalid value.
-            } else {
+	else
+	{
 		coord += vec2(0.5);
 		coord /= screenScale;
-	    }
+	}
 
-	    return coord;
-        }
-    #endif
+	return coord;
+}
+#endif
 
-    float CalcScanLineWeight(float dist) {
+float CalcScanLineWeight(float dist)
+{
 	return max(1.0-dist*dist*SCANLINE_WEIGHT, SCANLINE_GAP_BRIGHTNESS);
-    }
+}
 
-    float CalcScanLine(float dy) {
+float CalcScanLine(float dy)
+{
 	float scanLineWeight = CalcScanLineWeight(dy);
-        #if defined(MULTISAMPLE)
-	    scanLineWeight += CalcScanLineWeight(dy-filterWidth);
-	    scanLineWeight += CalcScanLineWeight(dy+filterWidth);
-	    scanLineWeight *= 0.3333333;
-        #endif
+#if defined(MULTISAMPLE)
+	scanLineWeight += CalcScanLineWeight(dy-filterWidth);
+	scanLineWeight += CalcScanLineWeight(dy+filterWidth);
+	scanLineWeight *= 0.3333333;
+#endif
 	return scanLineWeight;
-    }
+}
 
-    void main() {
-        #if defined(CURVATURE)
-	    vec2 texcoord = Distort(TEX0);
-	    if (texcoord.x < 0.0) {
+void main()
+{
+#if defined(CURVATURE)
+	vec2 texcoord = Distort(TEX0);
+	if (texcoord.x < 0.0)
 		gl_FragColor = vec4(0.0);
-            } else {
-        #else
-	        vec2 texcoord = TEX0;
-        #endif
-	    vec2 texcoordInPixels = texcoord * TextureSize;
-                #if defined(SHARPER)
-		    vec2 tempCoord = floor(texcoordInPixels) + 0.5;
-		    vec2 coord = tempCoord / TextureSize;
-		    vec2 deltas = texcoordInPixels - tempCoord;
-		    float scanLineWeight = CalcScanLine(deltas.y);
-		    vec2 signs = sign(deltas);
-		    deltas.x *= 2.0;
-		    deltas = deltas * deltas;
-		    deltas.y = deltas.y * deltas.y;
-		    deltas.x *= 0.5;
-		    deltas.y *= 8.0;
-		    deltas /= TextureSize;
-		    deltas *= signs;
-		    vec2 tc = coord + deltas;
-                #else
-		    float tempY = floor(texcoordInPixels.y) + 0.5;
-		    float yCoord = tempY / TextureSize.y;
-		    float dy = texcoordInPixels.y - tempY;
-		    float scanLineWeight = CalcScanLine(dy);
-		    float signY = sign(dy);
-		    dy = dy * dy;
-		    dy = dy * dy;
-		    dy *= 8.0;
-		    dy /= TextureSize.y;
-		    dy *= signY;
-		    vec2 tc = vec2(texcoord.x, yCoord + dy);
-                #endif
+	else
+#else
+	vec2 texcoord = TEX0;
+#endif
+	{
+		vec2 texcoordInPixels = texcoord * TextureSize;
+#if defined(SHARPER)
+		vec2 tempCoord = floor(texcoordInPixels) + 0.5;
+		vec2 coord = tempCoord / TextureSize;
+		vec2 deltas = texcoordInPixels - tempCoord;
+		float scanLineWeight = CalcScanLine(deltas.y);
+		vec2 signs = sign(deltas);
+		deltas.x *= 2.0;
+		deltas = deltas * deltas;
+		deltas.y = deltas.y * deltas.y;
+		deltas.x *= 0.5;
+		deltas.y *= 8.0;
+		deltas /= TextureSize;
+		deltas *= signs;
+		vec2 tc = coord + deltas;
+#else
+		float tempY = floor(texcoordInPixels.y) + 0.5;
+		float yCoord = tempY / TextureSize.y;
+		float dy = texcoordInPixels.y - tempY;
+		float scanLineWeight = CalcScanLine(dy);
+		float signY = sign(dy);
+		dy = dy * dy;
+		dy = dy * dy;
+		dy *= 8.0;
+		dy /= TextureSize.y;
+		dy *= signY;
+		vec2 tc = vec2(texcoord.x, yCoord + dy);
+#endif
 
-		vec3 colour = texture2D(u_image, tc).rgb;
+		vec3 colour = texture2D(Texture, tc).rgb;
 
-                #if defined(SCANLINES)
-                    #if defined(GAMMA)
-                        #if defined(FAKE_GAMMA)
-		            colour = colour * colour;
-                        #else
-		            colour = pow(colour, vec3(INPUT_GAMMA));
-                    #endif
-                #endif
+#if defined(SCANLINES)
+#if defined(GAMMA)
+#if defined(FAKE_GAMMA)
+		colour = colour * colour;
+#else
+		colour = pow(colour, vec3(INPUT_GAMMA));
+#endif
+#endif
 		scanLineWeight *= BLOOM_FACTOR;
 		colour *= scanLineWeight;
 
-                #if defined(GAMMA)
-                    #if defined(FAKE_GAMMA)
-		        colour = sqrt(colour);
-                    #else
-		        colour = pow(colour, vec3(1.0/OUTPUT_GAMMA));
-                    #endif
-                #endif
-        #endif
-        #if MASK_TYPE == 0
-	    gl_FragColor = vec4(colour, 1.0);
-        #else
-            #if MASK_TYPE == 1
+#if defined(GAMMA)
+#if defined(FAKE_GAMMA)
+		colour = sqrt(colour);
+#else
+		colour = pow(colour, vec3(1.0/OUTPUT_GAMMA));
+#endif
+#endif
+#endif
+#if MASK_TYPE == 0
+		gl_FragColor = vec4(colour, 1.0);
+#else
+#if MASK_TYPE == 1
 		float whichMask = fract(gl_FragCoord.x * 0.5);
 		vec3 mask;
 		if (whichMask < 0.5)
 			mask = vec3(MASK_BRIGHTNESS, 1.0, MASK_BRIGHTNESS);
 		else
 			mask = vec3(1.0, MASK_BRIGHTNESS, 1.0);
-            #elif MASK_TYPE == 2
+#elif MASK_TYPE == 2
 		float whichMask = fract(gl_FragCoord.x * 0.3333333);
 		vec3 mask = vec3(MASK_BRIGHTNESS, MASK_BRIGHTNESS, MASK_BRIGHTNESS);
 		if (whichMask < 0.3333333)
@@ -202,13 +226,10 @@ varying float filterWidth;
 			mask.y = 1.0;
 		else
 			mask.z = 1.0;
-            #endif
+#endif
 
-	    gl_FragColor = vec4(colour * mask, 1.0);
-        #endif
-
-    #if defined(CURVATURE)
-        }
-    #endif 
+		gl_FragColor = vec4(colour * mask, 1.0);
+#endif
+	}
 }
 #endif

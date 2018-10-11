@@ -17,9 +17,10 @@ export interface CommonRenderProps {
 }
 
 export interface RendererPrograms {
-    scene: WebGLProgram;
-    conv: WebGLProgram;
-    barrel: WebGLProgram;
-    scanlines: WebGLProgram;
+    scene?: WebGLProgram;
+    conv?: WebGLProgram;
+    barrel?: WebGLProgram;
+    scanlines?: WebGLProgram;
+    crt?: WebGLProgram;
 }
 

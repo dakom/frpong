@@ -13,6 +13,9 @@ import scanlinesFragmentShader from "./shaders/Scanlines-Shader-Fragment.glsl";
 
 import crtShader from "./shaders/CRT-Shader.glsl";
 
+const crtShaderSource = {vertex: "#define VERTEX\n" + crtShader, fragment: "#define FRAGMENT\n" + crtShader}
+
+
 export const setupRenderer = (constants:Constants) => new Promise<Renderer>((resolve, reject) => {
     const canvas = createCanvas(constants);
     const gl = createContext(canvas) ({ premultipliedAlpha: false});
@@ -21,7 +24,7 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
         {vertex: quadVertexShader, fragment: convFragmentShader},
         {vertex: quadVertexShader, fragment: barrelFragmentShader},
         {vertex: quadVertexShader, fragment: scanlinesFragmentShader},
-        //{vertex: "#define VERTEX\n" + crtShader, fragment: "#define FRAGMENT\n" + crtShader}
+        crtShaderSource
     ].map(compileShader(gl));
 
     const programError = programList.find(program => program instanceof Error);
@@ -35,6 +38,7 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
         conv: programList[1] as WebGLProgram,
         barrel: programList[2] as WebGLProgram,
         scanlines: programList[3] as WebGLProgram,
+        crt: programList[4] as WebGLProgram,
     }
     createSpriteTextures (constants) (gl);
     gl.clearColor(0, 0, 0, 0);

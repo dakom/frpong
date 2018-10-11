@@ -3,6 +3,7 @@ import {mat4} from "gl-matrix";
 import {createConvRenderer, KERNELS} from "./thunks/post/Convolution-Thunk";
 import {createBarrelRenderer} from "./thunks/post/Barrel-Thunk";
 import {createScanlinesRenderer} from "./thunks/post/Scanlines-Thunk";
+import {createCrtRenderer} from "./thunks/post/Crt-Thunk";
 
 
 interface Props {
@@ -48,6 +49,13 @@ export const createPostProcessing = ({gl, canvas, programs, camera, constants}:P
         canvas,
     });
 
+    const renderCrt = createCrtRenderer({
+        gl,
+        constants,
+        program: programs.crt,
+        camera,
+        canvas,
+    });
     const doEffect = (fb:WebGLFramebuffer) => (program:WebGLProgram) => (fn:(texture:WebGLTexture) => void) => {
         const inTex = effectSwitch ? texture1 : texture2;
         const outTex = effectSwitch ? texture2 : texture1;
@@ -69,9 +77,10 @@ export const createPostProcessing = ({gl, canvas, programs, camera, constants}:P
     const render = (renderScene:() => void) => {
         //Last effect must be with null framebuffer in order to show
         doEffect (fb) (programs.scene) (renderScene);
-        doEffect (fb) (programs.conv) (renderConv(KERNELS.BOX_BLUR));
-        doEffect (fb) (programs.barrel) (renderBarrel);
-        doEffect (null) (programs.scanlines) (renderScanlines);
+        doEffect (fb) (programs.crt) (renderCrt);
+        doEffect (null) (programs.conv) (renderConv(KERNELS.BOX_BLUR));
+        //doEffect (fb) (programs.barrel) (renderBarrel);
+        //doEffect (null) (programs.scanlines) (renderScanlines);
     }
 
     return {render}
