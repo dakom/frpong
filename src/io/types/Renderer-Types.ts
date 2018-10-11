@@ -20,5 +20,6 @@ export interface RendererPrograms {
     scene: WebGLProgram;
     conv: WebGLProgram;
     barrel: WebGLProgram;
+    scanlines: WebGLProgram;
 }
 

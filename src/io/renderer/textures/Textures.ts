@@ -18,6 +18,11 @@ export const createSpriteTextures = (constants:Constants) => (gl:WebGLRenderingC
         RenderableId.PADDLE2, 
         createTexture (gl) (getPaddleImage(constants))
     );
+    
+    textureCache.set(
+        RenderableId.BG, 
+        createTexture (gl) (getBgImage(constants))
+    );
 }
 
 export const updateScoreboardTexture = (constants:Constants) => (gl:WebGLRenderingContext) => (text:string) => {
@@ -28,6 +33,18 @@ export const updateScoreboardTexture = (constants:Constants) => (gl:WebGLRenderi
     );
 }
 
+const getBgImage = (constants:Constants) => {
+    const color = "blue";
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = constants.canvasWidth;
+    canvas.height = constants.canvasHeight; 
+    
+    ctx.fillStyle = color; 
+    ctx.fillRect(0,0, constants.canvasWidth, constants.canvasHeight);
+    return canvas;
+}
 const getBallImage = (constants:Constants) => {
     const radius = constants.ballRadius;
     const color = "white";

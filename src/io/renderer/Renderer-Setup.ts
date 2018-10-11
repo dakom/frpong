@@ -9,6 +9,7 @@ import quadVertexShader from "./shaders/Quad-Shader-Vertex.glsl";
 import quadFragmentShader from "./shaders/Quad-Shader-Fragment.glsl";
 import convFragmentShader from "./shaders/Convolution-Shader-Fragment.glsl";
 import barrelFragmentShader from "./shaders/Barrel-Shader-Fragment.glsl";
+import scanlinesFragmentShader from "./shaders/Scanlines-Shader-Fragment.glsl";
 
 import crtShader from "./shaders/CRT-Shader.glsl";
 
@@ -19,6 +20,7 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
         {vertex: quadVertexShader, fragment: quadFragmentShader},
         {vertex: quadVertexShader, fragment: convFragmentShader},
         {vertex: quadVertexShader, fragment: barrelFragmentShader},
+        {vertex: quadVertexShader, fragment: scanlinesFragmentShader},
         //{vertex: "#define VERTEX\n" + crtShader, fragment: "#define FRAGMENT\n" + crtShader}
     ].map(compileShader(gl));
 
@@ -32,6 +34,7 @@ export const setupRenderer = (constants:Constants) => new Promise<Renderer>((res
         scene: programList[0] as WebGLProgram,
         conv: programList[1] as WebGLProgram,
         barrel: programList[2] as WebGLProgram,
+        scanlines: programList[3] as WebGLProgram,
     }
     createSpriteTextures (constants) (gl);
     gl.clearColor(0, 0, 0, 0);

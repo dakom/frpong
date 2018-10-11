@@ -1,17 +1,14 @@
-import {Constants, Camera} from "io/types/Types";
+import {Constants, Camera, RendererPrograms} from "io/types/Types";
 import {mat4} from "gl-matrix";
 import {createConvRenderer, KERNELS} from "./thunks/post/Convolution-Thunk";
 import {createBarrelRenderer} from "./thunks/post/Barrel-Thunk";
+import {createScanlinesRenderer} from "./thunks/post/Scanlines-Thunk";
 
 
 interface Props {
     gl: WebGLRenderingContext; 
     canvas:HTMLCanvasElement;
-    programs: {
-        scene: WebGLProgram;
-        conv: WebGLProgram;
-        barrel: WebGLProgram;
-    };
+    programs:RendererPrograms;
     camera:Camera;
     constants:Constants;
 }
@@ -19,6 +16,7 @@ interface Props {
 
 export const createPostProcessing = ({gl, canvas, programs, camera, constants}:Props) => {
 
+    let effectSwitch:boolean; 
 
     const fb = gl.createFramebuffer();
 
@@ -42,8 +40,17 @@ export const createPostProcessing = ({gl, canvas, programs, camera, constants}:P
         distortion: 1.2 
     });
 
+    const renderScanlines = createScanlinesRenderer({
+        gl,
+        constants,
+        program: programs.scanlines,
+        camera,
+        canvas,
+    });
 
-    const doEffect = (fb:WebGLFramebuffer) => (inTex:WebGLTexture) => (outTex:WebGLTexture) => (program:WebGLProgram) => (fn:(texture:WebGLTexture) => void) => {
+    const doEffect = (fb:WebGLFramebuffer) => (program:WebGLProgram) => (fn:(texture:WebGLTexture) => void) => {
+        const inTex = effectSwitch ? texture1 : texture2;
+        const outTex = effectSwitch ? texture2 : texture1;
         gl.useProgram(program);
         gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
         if(fb != null) {
@@ -54,34 +61,17 @@ export const createPostProcessing = ({gl, canvas, programs, camera, constants}:P
         }
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         fn(inTex);
+        
+        effectSwitch = effectSwitch ? false : true;
     }
 
-    const doEffectStart = (program:WebGLProgram) => (fn:(texture:WebGLTexture) => void) => {
-        doEffect (fb) (null) (texture1) (program) (fn);
-    }
-
-    let lastEffect = "";
-
-    const doEffectA = (program:WebGLProgram) => (fn:(texture:WebGLTexture) => void) => {
-        lastEffect = "A";
-
-        doEffect (fb) (texture1) (texture2) (program) (fn);
-    }
-    const doEffectB = (program:WebGLProgram) => (fn:(texture:WebGLTexture) => void) => {
-        lastEffect = "B";
-        doEffect (fb) (texture2) (texture1) (program) (fn);
-    }
-    const doEffectEnd = (program:WebGLProgram) => (fn:(texture:WebGLTexture) => void) => {
-        doEffect (null) (lastEffect === "A" ? texture2 : texture1) (null) (program) (fn);
-    }
 
     const render = (renderScene:() => void) => {
-        doEffectStart (programs.scene) (renderScene);
-        //to stack different effects, just alternate between A and B
-        doEffectA (programs.barrel) (renderBarrel);
-        //last call must be doEffectEnd
-        doEffectEnd (programs.conv) (renderConv(KERNELS.BOX_BLUR));
-        //doEffectB (programs.conv) (renderConv(KERNELS.GAUSSIAN_BLUR));
+        //Last effect must be with null framebuffer in order to show
+        doEffect (fb) (programs.scene) (renderScene);
+        doEffect (fb) (programs.conv) (renderConv(KERNELS.BOX_BLUR));
+        doEffect (fb) (programs.barrel) (renderBarrel);
+        doEffect (null) (programs.scanlines) (renderScanlines);
     }
 
     return {render}

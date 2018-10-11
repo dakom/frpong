@@ -1,4 +1,4 @@
-import {Renderable, CommonRenderProps} from "io/types/Types";
+import {Renderable, RenderableId, CommonRenderProps} from "io/types/Types";
 import {textureCache} from "io/renderer/textures/Textures";
 import {mat4} from "gl-matrix";
 
@@ -60,6 +60,7 @@ export const createSceneThunk = ({gl, canvas, program, camera}:CommonRenderProps
     }
 
     return (renderables:Array<Renderable>) => {
+        render({id: RenderableId.BG});
 
         renderables.forEach(render);
     }
