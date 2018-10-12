@@ -77,10 +77,10 @@ export const createPostProcessing = ({gl, canvas, programs, camera, constants}:P
     const render = (renderScene:() => void) => {
         //Last effect must be with null framebuffer in order to show
         doEffect (fb) (programs.scene) (renderScene);
-        doEffect (fb) (programs.crt) (renderCrt);
-        doEffect (null) (programs.conv) (renderConv(KERNELS.BOX_BLUR));
-        //doEffect (fb) (programs.barrel) (renderBarrel);
-        //doEffect (null) (programs.scanlines) (renderScanlines);
+        //TODO - BROKEN!!! doEffect (fb) (programs.crt) (renderCrt);
+        doEffect (fb) (programs.conv) (renderConv(KERNELS.BOX_BLUR));
+        doEffect (fb) (programs.barrel) (renderBarrel);
+        doEffect (null) (programs.scanlines) (renderScanlines);
     }
 
     return {render}
