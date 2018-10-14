@@ -4,8 +4,9 @@
   "description": "frpong",
   "main": "index.js",
   "scripts": {
-    "clean": "rimraf ./dist && rimraf ./output && rimraf ./target",
+    "clean": "rimraf ./dist/* && rimraf ./output && rimraf ./target",
     "bundle": "npm run build:prod && cross-env NODE_ENV=production webpack --progress --config webpack.prod.js && cp -R ./site/static ./dist/ && cp ./site/_redirects ./dist/",
+    "deploy": "npm run bundle && cd dist && git add --all && git commit -m \"Release at $(date)\" && git push",
     "dev": "npm run build:dev && npm-run-all -p _dev:webpack-server _dev:watch:rust",
     "_dev:webpack-server": "cross-env NODE_ENV=dev-auto-reload webpack-dev-server --progress --open --config webpack.dev.js",
     "_dev:watch:rust": "chokidar \"**/*.rs\" -c \"npm run build:rust:dev\"",
