@@ -42,5 +42,5 @@ Specifically, a mixture of Purescript, SodiumFRP, Rust/Wasm, Typescript, WebGL/W
 
 * Experimental and purposefully over-engineered - though I dunno, this also kinda feels like a cool starting point? 
 * The multi-threading is probably pointless and wasteful in this case, but it doesn't really hurt afaik
-* Different webpack modes ("dev", "build" and "bundle") - as well as travis setup for deployment
+* Different webpack modes ("dev", "build" and "bundle") - as well as travis setup for running tests 
 * It might be worth exploring state serialization via flatbuffers and then using that to transfer across all boundaries (even to the wasm layer)
