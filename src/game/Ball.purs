@@ -72,7 +72,7 @@ updateBall tick originalState = case tick of
         updateTrajectory collision time #
         updatePosition time
     where
-        -- TODO - might be able to simplify with lenses
+        -- might be able to simplify with lenses
         updatePosition :: Time -> BallState -> BallState
         updatePosition time state = state {pos = updatePosition' time state.traj}
 
@@ -116,10 +116,7 @@ updateTrajectory' collision time vel =
         startTime = time - info.timeDiff
                             
         hitPoint = info.hitPoint
-        info = case collision of
-            -- TODO : should be able to match on any _ _
-            CollisionWall _ info -> {hitPoint: info.hitPoint, timeDiff: info.timeDiff} 
-            CollisionPaddle _ info -> {hitPoint: info.hitPoint, timeDiff: info.timeDiff} 
+        info = getCollisionInfo collision
 
 beginServe :: Time -> BallState
 beginServe startTime = 
@@ -134,8 +131,7 @@ beginServe startTime =
         randomOffset = unsafePerformEffect $ randomRange (-0.1) 0.1 
         randomDirection = if (unsafePerformEffect $ randomRange 0.0 1.0) > 0.5
                           then 2.0
-                          --else 1.0
-                          else 2.0
+                          else 1.0
         vel = getVelocity ((pi * randomDirection) + randomOffset)
 
 

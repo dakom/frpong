@@ -29,8 +29,8 @@ getPaddle ::    Stream Tick
                    }
 getPaddle sTick paddleType speed =
     {
-        cPosition: (\paddle -> paddle.pos) <$> cPaddleState,
-        cTrajectory: (\paddle -> paddle.traj) <$> cPaddleState
+        cPosition: _.pos <$> cPaddleState,
+        cTrajectory: _.traj <$> cPaddleState
     }
     where
           cPaddleState = accum (updatePaddle paddleType speed) (initialState paddleType) sTick

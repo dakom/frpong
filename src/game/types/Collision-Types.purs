@@ -14,6 +14,8 @@ type CollisionInfo r =
         | r
     }
 
+type AnyCollisionInfo = CollisionInfo ()
+
 type WallCollisionInfo = CollisionInfo ()
 
 type PaddleCollisionInfo = CollisionInfo (
@@ -24,3 +26,7 @@ instance showCollision :: Show Collision where
     show = case _ of
         CollisionWall wall info -> "collision with wall: " <> show wall <> show info
         CollisionPaddle paddle info -> "collision with paddle: " <> show paddle <> show info
+
+getCollisionInfo :: Collision -> AnyCollisionInfo
+getCollisionInfo (CollisionWall _ info) = info 
+getCollisionInfo (CollisionPaddle _ info) = {hitPoint: info.hitPoint, timeDiff: info.timeDiff} 

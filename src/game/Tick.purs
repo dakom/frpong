@@ -37,7 +37,7 @@ getTicks sTime sCollisionValue sController1String sController2String = do
 
 getCollisionTick :: Cell Time -> Stream Collision -> Stream Tick
 getCollisionTick cTime sCollisionValue =
-        snapshot (\collision time -> CollisionTick collision time) sCollisionValue cTime
+        snapshot CollisionTick sCollisionValue cTime
 
 getControllerTick :: Cell Time -> Stream String -> Stream Tick
 getControllerTick cTime sControllerString = sController
