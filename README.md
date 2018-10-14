@@ -6,7 +6,8 @@
 # [Live Demo](https://dakom.github.io/frpong)
 ----
 
-FRPong is a proof-of-concept for architecting a game on the web.
+FRPong is a proof-of-concept for architecting a game on the web using a combo of technologies (Purescript, SodiumFRP, Rust/Wasm, Typescript, WebGL/WebAudio, etc.)
+
 
 ## Controls
 
