@@ -23,28 +23,18 @@ By default the shader uses linear blending horizontally. If you find this too bl
 
 BLOOM_FACTOR controls the increase in width for bright scanlines.
 
-MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how much the mask type darkens the screen.
-
-#pragma parameter CURVATURE_X "Screen curvature - horizontal" 0.10 0.0 1.0 0.01
-#pragma parameter CURVATURE_Y "Screen curvature - vertical" 0.15 0.0 1.0 0.01
-#pragma parameter MASK_BRIGHTNESS "Mask brightness" 0.70 0.0 1.0 0.01
-#pragma parameter SCANLINE_WEIGHT "Scanline weight" 6.0 0.0 15.0 0.1
-#pragma parameter SCANLINE_GAP_BRIGHTNESS "Scanline gap brightness" 0.12 0.0 1.0 0.01
-#pragma parameter BLOOM_FACTOR "Bloom factor" 1.5 0.0 5.0 0.01
-#pragma parameter INPUT_GAMMA "Input gamma" 2.4 0.0 5.0 0.01
-#pragma parameter OUTPUT_GAMMA "Output gamma" 2.2 0.0 5.0 0.01
 */
 
 
 // Haven't put these as parameters as it would slow the code down.
-#define SCANLINES
+//#define SCANLINES
 #define MULTISAMPLE
 #define GAMMA
-//#define FAKE_GAMMA
-//#define CURVATURE
-//#define SHARPER
+#define FAKE_GAMMA
+#define CURVATURE
+#define SHARPER
 // MASK_TYPE: 0 = none, 1 = green/magenta, 2 = trinitron(ish)
-#define MASK_TYPE 1
+#define MASK_TYPE 2
 
 
 #define COMPAT_PRECISION mediump
@@ -60,26 +50,24 @@ precision mediump float;
 #define OUTPUT_GAMMA 2.2
 
 
-uniform vec2 TextureSize;
+uniform vec2 u_textureSize;
 #if defined(CURVATURE)
     varying vec2 screenScale;
 #endif
-varying vec2 TEX0;
 varying float filterWidth;
-
+varying vec2 v_texCoord;
 
 #if defined(VERTEX)
     attribute vec2 a_vertex;
-    varying vec2 v_texCoord;
     uniform mat4 u_transform;
     uniform mat4 u_size;
 
     void main() {
         #if defined(CURVATURE)
-	    screenScale = 1.0; // TextureSize / InputSize;
+	    screenScale = vec2(1.0, 1.0); // u_textureSize / InputSize;
         #endif
 	filterWidth = 1.0 / 3.0; //(InputSize.y / OutputSize.y) / 3.0;
-	TEX0 = v_texCoord;
+        v_texCoord = a_vertex;
         gl_Position = u_transform * (u_size * vec4(a_vertex,0,1));
     }
 #endif
@@ -126,17 +114,17 @@ varying float filterWidth;
 
     void main() {
         #if defined(CURVATURE)
-	    vec2 texcoord = Distort(TEX0);
+	    vec2 texcoord = Distort(v_texCoord);
 	    if (texcoord.x < 0.0) {
 		gl_FragColor = vec4(0.0);
             } else {
         #else
-	        vec2 texcoord = TEX0;
+	        vec2 texcoord = v_texCoord;
         #endif
-	    vec2 texcoordInPixels = texcoord * TextureSize;
+	    vec2 texcoordInPixels = texcoord * u_textureSize;
                 #if defined(SHARPER)
 		    vec2 tempCoord = floor(texcoordInPixels) + 0.5;
-		    vec2 coord = tempCoord / TextureSize;
+		    vec2 coord = tempCoord / u_textureSize;
 		    vec2 deltas = texcoordInPixels - tempCoord;
 		    float scanLineWeight = CalcScanLine(deltas.y);
 		    vec2 signs = sign(deltas);
@@ -145,19 +133,19 @@ varying float filterWidth;
 		    deltas.y = deltas.y * deltas.y;
 		    deltas.x *= 0.5;
 		    deltas.y *= 8.0;
-		    deltas /= TextureSize;
+		    deltas /= u_textureSize;
 		    deltas *= signs;
 		    vec2 tc = coord + deltas;
                 #else
 		    float tempY = floor(texcoordInPixels.y) + 0.5;
-		    float yCoord = tempY / TextureSize.y;
+		    float yCoord = tempY / u_textureSize.y;
 		    float dy = texcoordInPixels.y - tempY;
 		    float scanLineWeight = CalcScanLine(dy);
 		    float signY = sign(dy);
 		    dy = dy * dy;
 		    dy = dy * dy;
 		    dy *= 8.0;
-		    dy /= TextureSize.y;
+		    dy /= u_textureSize.y;
 		    dy *= signY;
 		    vec2 tc = vec2(texcoord.x, yCoord + dy);
                 #endif
@@ -184,7 +172,7 @@ varying float filterWidth;
                 #endif
         #endif
         #if MASK_TYPE == 0
-	    gl_FragColor = vec4(colour, 1.0);
+            gl_FragColor = vec4(colour, 1.0);
         #else
             #if MASK_TYPE == 1
 		float whichMask = fract(gl_FragCoord.x * 0.5);

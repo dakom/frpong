@@ -11,7 +11,7 @@ import convFragmentShader from "./shaders/Convolution-Shader-Fragment.glsl";
 import barrelFragmentShader from "./shaders/Barrel-Shader-Fragment.glsl";
 import scanlinesFragmentShader from "./shaders/Scanlines-Shader-Fragment.glsl";
 
-import crtShader from "./shaders/CRT-Shader.glsl";
+import crtShader from "./shaders/Crt-Shader.glsl";
 
 const crtShaderSource = {vertex: "#define VERTEX\n" + crtShader, fragment: "#define FRAGMENT\n" + crtShader}
 
@@ -71,8 +71,6 @@ const createCanvas = (constants:Constants) => {
 
     
     canvas.style.position = "absolute";
-
-    canvas.style.backgroundColor = "#333";
 
     canvas.setAttribute('width', `${constants.canvasWidth}`);
     canvas.setAttribute('height', `${constants.canvasHeight}`);

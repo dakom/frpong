@@ -18,7 +18,7 @@ const extend = target => {
 const browserConfig = merge(extend(common.browserConfig), {
     devServer: {
         //contentBase: path.join(__dirname, "dist/"),
-        contentBase: path.resolve(__dirname, './src/webpage'),
+        contentBase: path.resolve(__dirname, './site'),
         compress: true,
         port: 3000,
         headers: { "Access-Control-Allow-Origin": "*" },
