@@ -1,13 +1,12 @@
 [![Build Status](https://travis-ci.org/dakom/frpong.svg?branch=master)](https://travis-ci.org/dakom/frpong)
 
 
-# Work-in-progress...but playable! 
-
 # [Live Demo](https://dakom.github.io/frpong)
 ----
 
-FRPong is a proof-of-concept for architecting a game on the web using a combo of technologies (Purescript, SodiumFRP, Rust/Wasm, Typescript, WebGL/WebAudio, etc.)
+FRPong is a proof-of-concept for architecting a game on the web using a combo of technologies.
 
+Specifically, a mixture of Purescript, SodiumFRP, Rust/Wasm, Typescript, WebGL/WebAudio, etc.
 
 ## Controls
 
