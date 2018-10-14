@@ -40,11 +40,11 @@ export const startController = (handle: (controller:ControllerValue) => void) =>
     }
 
     const stopKeyboard = startKeyboard(updateStatus);
-    const stopMouse = startMouse(updateStatus);
+    //const stopMouse = startMouse(updateStatus);
 
     return () => {
         stopKeyboard();
-        stopMouse();
+        //stopMouse();
     }
 }
 
@@ -83,6 +83,8 @@ const startKeyboard = (handle: StatusUpdate) => {
     }
 }
 
+// Deprecated
+/*
 const startMouse = (handle:StatusUpdate) => {
     const hasPointer = (window as any).PointerEvent ? true : false;
     const startEvents = 
@@ -121,8 +123,8 @@ const startMouse = (handle:StatusUpdate) => {
     }
 
 
-    //document.addEventListener("
 }
+*/
 
 type StatusUpdate = (input:{controller: ControllerValue, status: InputStatus}) => void;
 

@@ -61,12 +61,13 @@ varying vec2 v_texCoord;
     attribute vec2 a_vertex;
     uniform mat4 u_transform;
     uniform mat4 u_size;
-
+    uniform vec2 u_inputSize;
+    uniform vec2 u_outputSize;
     void main() {
         #if defined(CURVATURE)
-	    screenScale = vec2(1.0, 1.0); // u_textureSize / InputSize;
+	    screenScale = vec2(1.0, 1.0); //u_textureSize / u_inputSize;
         #endif
-	filterWidth = 1.0 / 3.0; //(InputSize.y / OutputSize.y) / 3.0;
+	filterWidth = 1.0 / 3.0; //(u_inputSize.y / u_outputSize.y) / 3.0;
         v_texCoord = a_vertex;
         gl_Position = u_transform * (u_size * vec4(a_vertex,0,1));
     }

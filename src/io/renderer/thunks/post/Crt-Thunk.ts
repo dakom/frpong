@@ -7,13 +7,13 @@ interface RenderProps extends CommonRenderProps {
 }
 
 export const createCrtRenderer = (props:RenderProps) => {
-    const {gl, program} = props;
+    const {gl, program, constants} = props;
 
     const prepRender = createCommonThunk(props);
 
-
     return (texture:WebGLTexture) => {
         prepRender(texture);
+
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
