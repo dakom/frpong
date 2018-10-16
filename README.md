@@ -6,7 +6,7 @@
 
 FRPong is a proof-of-concept for architecting a game on the web using a combo of technologies.
 
-Specifically, a mixture of Purescript, SodiumFRP, Rust/Wasm, Typescript, WebGL/WebAudio, etc.
+Specifically, a mixture of Purescript, SodiumFRP, Rust/Wasm, Typescript, WebGL/WebAudio/WebWorkers, etc.
 
 ## Controls
 
